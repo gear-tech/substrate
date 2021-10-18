@@ -70,6 +70,9 @@ pub enum Error {
 	/// Note that if wasm module makes an out-of-bounds access then trap will occur.
 	OutOfBounds,
 
+	/// Trying to grow memory by more than maximum limit.
+	MemoryGrow,
+
 	/// Failed to invoke the start function or an exported function for some reason.
 	Execution,
 }
@@ -113,6 +116,16 @@ pub trait SandboxMemory: Sized + Clone {
 	///
 	/// Returns `Err` if the range is out-of-bounds.
 	fn set(&self, ptr: u32, value: &[u8]) -> Result<(), Error>;
+
+	/// Grow memory with provided number of pages.
+	///
+	/// Returns `Err` if attempted to allocate more memory than permited by the limit.
+	pub fn grow(&self, pages: u32) -> Result<u32, Error>;
+
+	/// Returns current memory size.
+	///
+	/// Maximum memory size cannot exceed 65536 pages or 4GiB.
+	pub fn size(&self) -> u32;
 }
 
 /// Struct that can be used for defining an environment for a sandboxed module.
