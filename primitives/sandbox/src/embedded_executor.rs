@@ -57,6 +57,17 @@ impl super::SandboxMemory for Memory {
 		self.memref.set(ptr, value).map_err(|_| Error::OutOfBounds)?;
 		Ok(())
 	}
+
+	pub fn grow(&self, pages: u32) -> Result<u32, Error> {
+		self.memref
+			.grow(Pages(pages as usize))
+			.map(|prev| (prev.0 as u32))
+			.map_err(|_| Error::MemoryGrow)
+	}
+
+	pub fn size(&self) -> u32 {
+		self.memref.current_size().0 as u32
+	}
 }
 
 struct HostFuncIndex(usize);
