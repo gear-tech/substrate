@@ -1,6 +1,6 @@
 // This file is part of Substrate.
 
-// Copyright (C) 2019-2021 Parity Technologies (UK) Ltd.
+// Copyright (C) 2019-2022 Parity Technologies (UK) Ltd.
 // SPDX-License-Identifier: Apache-2.0
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,10 +79,9 @@ pub mod pallet {
 	pub use crate::weights::WeightInfo;
 	use frame_support::{
 		pallet_prelude::*,
-		traits::{Currency, OnUnbalanced, ReservableCurrency},
+		traits::{Currency, DefensiveSaturating, OnUnbalanced, ReservableCurrency},
 	};
 	use frame_system::pallet_prelude::*;
-	use scale_info::TypeInfo;
 	use sp_arithmetic::{PerThing, Perquintill};
 	use sp_runtime::traits::{Saturating, Zero};
 	use sp_std::prelude::*;
@@ -179,6 +178,7 @@ pub mod pallet {
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
+	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
 	/// A single bid on a gilt, an item of a *queue* in `Queues`.
@@ -273,17 +273,23 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// A bid was successfully placed.
-		/// \[ who, amount, duration \]
-		BidPlaced(T::AccountId, BalanceOf<T>, u32),
+		BidPlaced { who: T::AccountId, amount: BalanceOf<T>, duration: u32 },
 		/// A bid was successfully removed (before being accepted as a gilt).
-		/// \[ who, amount, duration \]
-		BidRetracted(T::AccountId, BalanceOf<T>, u32),
+		BidRetracted { who: T::AccountId, amount: BalanceOf<T>, duration: u32 },
 		/// A bid was accepted as a gilt. The balance may not be released until expiry.
-		/// \[ index, expiry, who, amount \]
-		GiltIssued(ActiveIndex, T::BlockNumber, T::AccountId, BalanceOf<T>),
+		GiltIssued {
+			index: ActiveIndex,
+			expiry: T::BlockNumber,
+			who: T::AccountId,
+			amount: BalanceOf<T>,
+		},
 		/// An expired gilt has been thawed.
-		/// \[ index, who, original_amount, additional_amount \]
-		GiltThawed(ActiveIndex, T::AccountId, BalanceOf<T>, BalanceOf<T>),
+		GiltThawed {
+			index: ActiveIndex,
+			who: T::AccountId,
+			original_amount: BalanceOf<T>,
+			additional_amount: BalanceOf<T>,
+		},
 	}
 
 	#[pallet::error]
@@ -377,7 +383,7 @@ pub mod pallet {
 				qs[queue_index].0 += net.0;
 				qs[queue_index].1 = qs[queue_index].1.saturating_add(net.1);
 			});
-			Self::deposit_event(Event::BidPlaced(who.clone(), amount, duration));
+			Self::deposit_event(Event::BidPlaced { who: who.clone(), amount, duration });
 
 			Ok(().into())
 		}
@@ -415,7 +421,7 @@ pub mod pallet {
 			});
 
 			T::Currency::unreserve(&bid.who, bid.amount);
-			Self::deposit_event(Event::BidRetracted(bid.who, bid.amount, duration));
+			Self::deposit_event(Event::BidRetracted { who: bid.who, amount: bid.amount, duration });
 
 			Ok(().into())
 		}
@@ -494,7 +500,12 @@ pub mod pallet {
 					debug_assert!(err_amt.is_zero());
 				}
 
-				let e = Event::GiltThawed(index, gilt.who, gilt.amount, gilt_value);
+				let e = Event::GiltThawed {
+					index,
+					who: gilt.who,
+					original_amount: gilt.amount,
+					additional_amount: gilt_value,
+				};
 				Self::deposit_event(e);
 			});
 
@@ -588,10 +599,12 @@ pub mod pallet {
 								remaining -= amount;
 								// Should never underflow since it should track the total of the
 								// bids exactly, but we'll be defensive.
-								qs[queue_index].1 = qs[queue_index].1.saturating_sub(bid.amount);
+								qs[queue_index].1 =
+									qs[queue_index].1.defensive_saturating_sub(bid.amount);
 
 								// Now to activate the bid...
-								let nongilt_issuance = total_issuance.saturating_sub(totals.frozen);
+								let nongilt_issuance =
+									total_issuance.defensive_saturating_sub(totals.frozen);
 								let effective_issuance = totals
 									.proportion
 									.left_from_one()
@@ -602,9 +615,11 @@ pub mod pallet {
 								let who = bid.who;
 								let index = totals.index;
 								totals.frozen += bid.amount;
-								totals.proportion = totals.proportion.saturating_add(proportion);
+								totals.proportion =
+									totals.proportion.defensive_saturating_add(proportion);
 								totals.index += 1;
-								let e = Event::GiltIssued(index, expiry, who.clone(), amount);
+								let e =
+									Event::GiltIssued { index, expiry, who: who.clone(), amount };
 								Self::deposit_event(e);
 								let gilt = ActiveGilt { amount, proportion, who, expiry };
 								Active::<T>::insert(index, gilt);
