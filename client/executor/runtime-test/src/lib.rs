@@ -409,6 +409,7 @@ wasm_export_sandbox_test_functions! {
 			Err(sp_sandbox::Error::Module) => 1,
 			Err(sp_sandbox::Error::Execution) => 2,
 			Err(sp_sandbox::Error::OutOfBounds) => 3,
+			Err(sp_sandbox::Error::MemoryGrow) => 4,
 		};
 
 		code
