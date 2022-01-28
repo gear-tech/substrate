@@ -100,6 +100,14 @@ impl super::SandboxMemory for Memory {
 			_ => unreachable!(),
 		}
 	}
+
+	fn grow(&self, pages: u32) -> Result<u32, Error> {
+		todo!()
+	}
+
+	fn size(&self) -> u32 {
+		todo!()
+	}
 }
 
 /// A builder for the environment of the sandboxed WASM module.
