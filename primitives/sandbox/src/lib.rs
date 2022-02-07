@@ -115,7 +115,7 @@ pub trait SandboxMemory: Sized + Clone {
 	///
 	/// Returns `Err` if the range is out-of-bounds.
 	fn set(&self, ptr: u32, value: &[u8]) -> Result<(), Error>;
-	
+
 	/// Grow memory with provided number of pages.
 	///
 	/// Returns `Err` if attempted to allocate more memory than permited by the limit.
