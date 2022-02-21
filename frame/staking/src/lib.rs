@@ -221,16 +221,16 @@
 //!
 //! The validator and its nominator split their reward as following:
 //!
-//! The validator can declare an amount, named
-//! [`commission`](ValidatorPrefs::commission), that does not get shared
-//! with the nominators at each reward payout through its
-//! [`ValidatorPrefs`]. This value gets deducted from the total reward
-//! that is paid to the validator and its nominators. The remaining portion is split among the
-//! validator and all of the nominators that nominated the validator, proportional to the value
-//! staked behind this validator (_i.e._ dividing the
-//! [`own`](Exposure::own) or
-//! [`others`](Exposure::others) by
-//! [`total`](Exposure::total) in [`Exposure`]).
+//! The validator can declare an amount, named [`commission`](ValidatorPrefs::commission), that does
+//! not get shared with the nominators at each reward payout through its [`ValidatorPrefs`]. This
+//! value gets deducted from the total reward that is paid to the validator and its nominators. The
+//! remaining portion is split pro rata among the validator and the top
+//! [`Config::MaxNominatorRewardedPerValidator`] nominators that nominated the validator,
+//! proportional to the value staked behind the validator (_i.e._ dividing the
+//! [`own`](Exposure::own) or [`others`](Exposure::others) by [`total`](Exposure::total) in
+//! [`Exposure`]). Note that the pro rata division of rewards uses the total exposure behind the
+//! validator, *not* just the exposure of the validator and the top
+//! [`Config::MaxNominatorRewardedPerValidator`] nominators.
 //!
 //! All entities who receive a reward have the option to choose their reward destination through the
 //! [`Payee`] storage item (see
@@ -576,7 +576,7 @@ where
 
 /// A record of the nominations made by a specific account.
 #[derive(PartialEqNoBound, EqNoBound, Clone, Encode, Decode, RuntimeDebugNoBound, TypeInfo)]
-#[codec(mel_bound(T: Config))]
+#[codec(mel_bound())]
 #[scale_info(skip_type_params(T))]
 pub struct Nominations<T: Config> {
 	/// The targets of nomination.
