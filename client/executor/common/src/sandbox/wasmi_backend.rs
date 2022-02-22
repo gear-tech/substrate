@@ -160,7 +160,7 @@ impl MemoryTransfer for MemoryWrapper {
 	}
 
 	fn size(&self) -> error::Result<WordSize> {
-		self.0.current_size().map(|res| res.0 as u32).map_err(|err| error::Error::Wasmi(err))
+		Ok(self.0.current_size().0 as u32)
 	}
 }
 

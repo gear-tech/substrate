@@ -196,6 +196,12 @@ impl Sandbox for FunctionExecutor {
 		sandboxed_memory.grow(pages).map_err(|e| e.to_string())
 	}
 
+	fn memory_size(&mut self, memory_id: MemoryId) -> WResult<u32> {
+		let sandboxed_memory =
+			self.sandbox_store.borrow().memory(memory_id).map_err(|e| e.to_string())?;
+		sandboxed_memory.size().map_err(|e| e.to_string())
+	}
+
 	fn memory_teardown(&mut self, memory_id: MemoryId) -> WResult<()> {
 		self.sandbox_store
 			.borrow_mut()

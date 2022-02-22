@@ -54,5 +54,5 @@ pub trait MemoryTransfer {
 	fn grow(&self, pages: WordSize) -> Result<WordSize>;
 
 	/// Get memory size
-	fn grow(&self) -> Result<WordSize>;
+	fn size(&self) -> Result<WordSize>;
 }

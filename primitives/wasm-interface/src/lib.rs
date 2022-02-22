@@ -357,6 +357,11 @@ pub trait Sandbox {
 		memory_id: MemoryId,
 		pages: WordSize,
 	) -> Result<u32>;
+	/// Grow sandbox memory from the `memory_id` instance.
+	fn memory_size(
+		&mut self,
+		memory_id: MemoryId,
+	) -> Result<u32>;
 	/// Delete a memory instance.
 	fn memory_teardown(&mut self, memory_id: MemoryId) -> Result<()>;
 	/// Create a new memory instance with the given `initial` size and the `maximum` size.
