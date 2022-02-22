@@ -110,11 +110,7 @@ impl super::SandboxMemory for Memory {
 	}
 
 	fn size(&self) -> u32 {
-		match sandbox::memory_size(self.handle.memory_idx) {
-			pages => Ok(pages),
-			sandbox_primitives::ERR_OUT_OF_BOUNDS => Err(Error::OutOfBounds),
-			_ => unreachable!(),
-		}
+		sandbox::memory_size(self.handle.memory_idx)
 	}
 }
 
