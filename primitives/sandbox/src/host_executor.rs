@@ -102,17 +102,19 @@ impl super::SandboxMemory for Memory {
 	}
 
 	fn grow(&self, pages: u32) -> Result<u32, Error> {
-		let result =
-			sandbox::memory_grow(self.handle.memory_idx, pages);
-		match result {
-			sandbox_primitives::ERR_OK => Ok(()),
+		match sandbox::memory_grow(self.handle.memory_idx, pages) {
+			pages => Ok(pages),
 			sandbox_primitives::ERR_OUT_OF_BOUNDS => Err(Error::OutOfBounds),
 			_ => unreachable!(),
 		}
 	}
 
 	fn size(&self) -> u32 {
-		todo!()
+		match sandbox::memory_size(self.handle.memory_idx) {
+			pages => Ok(pages),
+			sandbox_primitives::ERR_OUT_OF_BOUNDS => Err(Error::OutOfBounds),
+			_ => unreachable!(),
+		}
 	}
 }
 
