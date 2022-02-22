@@ -19,7 +19,7 @@
 //! Utilities used by all backends
 
 use crate::error::Result;
-use sp_wasm_interface::Pointer;
+use sp_wasm_interface::{Pointer, WordSize};
 use std::ops::Range;
 
 /// Construct a range from an offset to a data length after the offset.
@@ -49,4 +49,10 @@ pub trait MemoryTransfer {
 	///
 	/// Returns an error if the write would go out of the memory bounds.
 	fn write_from(&self, dest_addr: Pointer<u8>, source: &[u8]) -> Result<()>;
+
+	/// Grow memory by amount of pages.
+	fn grow(&self, pages: WordSize) -> Result<WordSize>;
+
+	/// Get memory size
+	fn grow(&self) -> Result<WordSize>;
 }

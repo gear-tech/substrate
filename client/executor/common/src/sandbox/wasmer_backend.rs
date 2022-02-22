@@ -431,4 +431,18 @@ impl MemoryTransfer for MemoryWrapper {
 			Ok(())
 		}
 	}
+
+	fn grow(&self, pages: WordSize) -> Result<u32> {
+		unsafe {
+			let memory = &mut self.buffer.borrow_mut();
+			memory.grow(pages)
+		}
+	}
+
+	fn size(&self) -> Result<u32> {
+		unsafe {
+			let memory = &mut self.buffer.borrow_mut();
+			memory.size(pages)
+		}
+	}
 }

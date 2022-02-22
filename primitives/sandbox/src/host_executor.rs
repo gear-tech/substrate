@@ -102,10 +102,23 @@ impl super::SandboxMemory for Memory {
 	}
 
 	fn grow(&self, pages: u32) -> Result<u32, Error> {
-		todo!()
+		let result =
+			sandbox::memory_grow(self.handle.memory_idx, pages);
+		match result {
+			sandbox_primitives::ERR_OK => Ok(()),
+			sandbox_primitives::ERR_OUT_OF_BOUNDS => Err(Error::OutOfBounds),
+			_ => unreachable!(),
+		}
 	}
 
 	fn size(&self) -> u32 {
+		todo!()
+	}
+}
+
+impl Memory {
+	/// Returns pointer to the begin of wasm mem buffer
+	pub unsafe fn get_buff(&self) -> *mut u8 {
 		todo!()
 	}
 }

@@ -1537,6 +1537,27 @@ pub trait Sandbox {
 			.expect("Failed to set memory with sandbox")
 	}
 
+	/// Grow the memory from the instance with `memory_idx`.
+	fn memory_grow(
+		&mut self,
+		memory_idx: u32,
+		pages: u32,
+	) -> u32 {
+		self.sandbox()
+			.memory_grow(memory_idx, pages)
+			.expect("Failed to grow memory with sandbox")
+	}
+
+	/// Get the memory size from the instance with `memory_idx`.
+	fn memory_size(
+		&mut self,
+		memory_idx: u32
+	) -> u32 {
+		self.sandbox()
+			.memory_size(memory_idx)
+			.expect("Failed to get memory size with sandbox")
+	}
+
 	/// Teardown the memory instance with the given `memory_idx`.
 	fn memory_teardown(&mut self, memory_idx: u32) {
 		self.sandbox()

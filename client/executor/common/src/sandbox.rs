@@ -399,6 +399,24 @@ impl util::MemoryTransfer for Memory {
 			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.write_from(dest_addr, source),
 		}
 	}
+
+	fn grow(&self, pages: WordSize) -> Result<WordSize> {
+		match self {
+			Memory::Wasmi(sandboxed_memory) => sandboxed_memory.grow(pages),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.grow(pages),
+		}
+	}
+
+	fn size(&self) -> Result<WordSize> {
+		match self {
+			Memory::Wasmi(sandboxed_memory) => sandboxed_memory.size(),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.size(),
+		}
+	}
 }
 
 /// Information specific to a particular execution backend
@@ -420,8 +438,9 @@ impl BackendContext {
 			SandboxBackend::TryWasmer => BackendContext::Wasmi,
 
 			#[cfg(feature = "wasmer-sandbox")]
-			SandboxBackend::Wasmer | SandboxBackend::TryWasmer =>
-				BackendContext::Wasmer(WasmerBackend::new()),
+			SandboxBackend::Wasmer | SandboxBackend::TryWasmer => {
+				BackendContext::Wasmer(WasmerBackend::new())
+			},
 		}
 	}
 }
@@ -577,8 +596,9 @@ impl<DT: Clone> Store<DT> {
 			BackendContext::Wasmi => wasmi_instantiate(wasm, guest_env, state, sandbox_context)?,
 
 			#[cfg(feature = "wasmer-sandbox")]
-			BackendContext::Wasmer(ref context) =>
-				wasmer_instantiate(&context, wasm, guest_env, state, sandbox_context)?,
+			BackendContext::Wasmer(ref context) => {
+				wasmer_instantiate(&context, wasm, guest_env, state, sandbox_context)?
+			},
 		};
 
 		Ok(UnregisteredInstance { sandbox_instance })

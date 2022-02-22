@@ -198,6 +198,16 @@ impl<'a> Sandbox for HostContext<'a> {
 		Ok(sandbox_primitives::ERR_OK)
 	}
 
+	fn memory_grow(&mut self, memory_id: MemoryId, pages: WordSize) -> sp_wasm_interface::Result<u32> {
+		let sandboxed_memory = self.sandbox_store().memory(memory_id).map_err(|e| e.to_string())?;
+		sandboxed_memory.grow(pages).map_err(|e| e.to_string())
+	}
+
+	fn memory_size(&mut self, memory_id: MemoryId) -> sp_wasm_interface::Result<u32> {
+		let sandboxed_memory = self.sandbox_store().memory(memory_id).map_err(|e| e.to_string())?;
+		sandboxed_memory.size().map_err(|e| e.to_string())
+	}
+
 	fn memory_teardown(&mut self, memory_id: MemoryId) -> sp_wasm_interface::Result<()> {
 		self.sandbox_store_mut().memory_teardown(memory_id).map_err(|e| e.to_string())
 	}

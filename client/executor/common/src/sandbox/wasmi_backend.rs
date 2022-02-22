@@ -154,6 +154,14 @@ impl MemoryTransfer for MemoryWrapper {
 			Ok(())
 		})
 	}
+
+	fn grow(&self, pages: WordSize) -> error::Result<WordSize> {
+		self.0.grow(Pages(pages as usize)).map(|res| res.0 as u32).map_err(|err| error::Error::Wasmi(err))
+	}
+
+	fn size(&self) -> error::Result<WordSize> {
+		self.0.current_size().map(|res| res.0 as u32).map_err(|err| error::Error::Wasmi(err))
+	}
 }
 
 impl<'a> wasmi::Externals for GuestExternals<'a> {
