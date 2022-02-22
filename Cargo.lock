@@ -10023,7 +10023,6 @@ dependencies = [
  "sp-std",
  "sp-wasm-interface",
  "wasmi 0.11.0",
- "wasmi 0.9.1",
  "wat",
 ]
 
@@ -11730,7 +11729,6 @@ dependencies = [
  "downcast-rs",
  "errno",
  "libc",
- "libm",
  "memory_units",
  "num-rational 0.2.4",
  "num-traits",
