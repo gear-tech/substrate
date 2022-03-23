@@ -135,6 +135,11 @@ pub trait CliConfiguration<DCV: DefaultConfigurationValues = ()>: Sized {
 		Ok(self.shared_params().is_dev())
 	}
 
+	/// Returns `true` if the node must use default execution strategies even in dev mode.
+	fn is_use_default_exec_strateg(&self) -> Result<bool> {
+		Ok(self.shared_params().is_use_default_exec_strateg())
+	}
+
 	/// Gets the role
 	///
 	/// By default this is `Role::Full`.
@@ -294,11 +299,12 @@ pub trait CliConfiguration<DCV: DefaultConfigurationValues = ()>: Sized {
 	fn execution_strategies(
 		&self,
 		is_dev: bool,
+		is_use_default_exec_strateg: bool,
 		is_validator: bool,
 	) -> Result<ExecutionStrategies> {
 		Ok(self
 			.import_params()
-			.map(|x| x.execution_strategies(is_dev, is_validator))
+			.map(|x| x.execution_strategies(is_dev, is_use_default_exec_strateg, is_validator))
 			.unwrap_or_default())
 	}
 
@@ -482,6 +488,7 @@ pub trait CliConfiguration<DCV: DefaultConfigurationValues = ()>: Sized {
 		tokio_handle: tokio::runtime::Handle,
 	) -> Result<Configuration> {
 		let is_dev = self.is_dev()?;
+		let is_use_default_exec_strateg = self.is_use_default_exec_strateg()?;
 		let chain_id = self.chain_id(is_dev)?;
 		let chain_spec = cli.load_spec(&chain_id)?;
 		let base_path = self
@@ -532,7 +539,11 @@ pub trait CliConfiguration<DCV: DefaultConfigurationValues = ()>: Sized {
 			blocks_pruning: self.blocks_pruning()?,
 			wasm_method: self.wasm_method()?,
 			wasm_runtime_overrides: self.wasm_runtime_overrides(),
-			execution_strategies: self.execution_strategies(is_dev, is_validator)?,
+			execution_strategies: self.execution_strategies(
+				is_dev,
+				is_use_default_exec_strateg,
+				is_validator,
+			)?,
 			rpc_http: self.rpc_http(DCV::rpc_http_listen_port())?,
 			rpc_ws: self.rpc_ws(DCV::rpc_ws_listen_port())?,
 			rpc_ipc: self.rpc_ipc()?,
@@ -683,7 +694,7 @@ pub fn generate_node_name() -> String {
 		let count = node_name.chars().count();
 
 		if count < NODE_NAME_MAX_LENGTH {
-			return node_name
+			return node_name;
 		}
 	}
 }

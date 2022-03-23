@@ -57,12 +57,20 @@ impl super::SandboxMemory for Memory {
 		self.memref.set(ptr, value).map_err(|_| Error::OutOfBounds)?;
 		Ok(())
 	}
-}
 
-impl Memory {
-	/// Returns pointer to the begin of wasm mem buffer
-	pub unsafe fn get_buff(&self) -> *mut u8 {
-		self.memref.direct_access_mut().as_mut().as_mut_ptr()
+	fn grow(&self, pages: u32) -> Result<u32, Error> {
+		self.memref
+			.grow(Pages(pages as usize))
+			.map(|prev| (prev.0 as u32))
+			.map_err(|_| Error::MemoryGrow)
+	}
+
+	fn size(&self) -> u32 {
+		self.memref.current_size().0 as u32
+	}
+
+	unsafe fn get_buff(&self) -> u64 {
+		self.memref.direct_access_mut().as_mut().as_mut_ptr() as usize as u64
 	}
 }
 
@@ -322,7 +330,7 @@ mod tests {
 
 		fn env_assert(_e: &mut State, args: &[Value]) -> Result<ReturnValue, HostError> {
 			if args.len() != 1 {
-				return Err(HostError)
+				return Err(HostError);
 			}
 			let condition = args[0].as_i32().ok_or_else(|| HostError)?;
 			if condition != 0 {
@@ -333,7 +341,7 @@ mod tests {
 		}
 		fn env_inc_counter(e: &mut State, args: &[Value]) -> Result<ReturnValue, HostError> {
 			if args.len() != 1 {
-				return Err(HostError)
+				return Err(HostError);
 			}
 			let inc_by = args[0].as_i32().ok_or_else(|| HostError)?;
 			e.counter += inc_by as u32;
@@ -342,7 +350,7 @@ mod tests {
 		/// Function that takes one argument of any type and returns that value.
 		fn env_polymorphic_id(_e: &mut State, args: &[Value]) -> Result<ReturnValue, HostError> {
 			if args.len() != 1 {
-				return Err(HostError)
+				return Err(HostError);
 			}
 			Ok(ReturnValue::Value(args[0]))
 		}

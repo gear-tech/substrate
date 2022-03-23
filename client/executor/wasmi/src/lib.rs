@@ -315,6 +315,33 @@ impl Sandbox for FunctionExecutor {
 			.map(|i| i.get_global_val(name))
 			.map_err(|e| e.to_string())
 	}
+
+	fn memory_grow(&mut self, memory_id: MemoryId, pages: u32) -> WResult<u32> {
+		let mut m = self
+			.sandbox_store
+			.borrow_mut()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmi memory: {}", e))?;
+		m.memory_grow(pages).map_err(|e| format!("{}", e))
+	}
+
+	fn memory_size(&mut self, memory_id: MemoryId) -> WResult<u32> {
+		let mut m = self
+			.sandbox_store
+			.borrow_mut()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmi memory: {}", e))?;
+		Ok(m.memory_size())
+	}
+
+	fn get_buff(&mut self, memory_id: MemoryId) -> WResult<*mut u8> {
+		let mut m = self
+			.sandbox_store
+			.borrow_mut()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmi memory: {}", e))?;
+		Ok(m.get_buff())
+	}
 }
 
 /// Will be used on initialization of a module to resolve function and memory imports.
@@ -361,14 +388,14 @@ impl<'a> wasmi::ModuleImportResolver for Resolver<'a> {
 		for (function_index, function) in self.host_functions.iter().enumerate() {
 			if name == function.name() {
 				if signature == function.signature() {
-					return Ok(wasmi::FuncInstance::alloc_host(signature.into(), function_index))
+					return Ok(wasmi::FuncInstance::alloc_host(signature.into(), function_index));
 				} else {
 					return Err(wasmi::Error::Instantiation(format!(
 						"Invalid signature for function `{}` expected `{:?}`, got `{:?}`",
 						function.name(),
 						signature,
 						function.signature(),
-					)))
+					)));
 				}
 			}
 		}
@@ -391,8 +418,9 @@ impl<'a> wasmi::ModuleImportResolver for Resolver<'a> {
 	) -> Result<MemoryRef, wasmi::Error> {
 		if field_name == "memory" {
 			match &mut *self.import_memory.borrow_mut() {
-				Some(_) =>
-					Err(wasmi::Error::Instantiation("Memory can not be imported twice!".into())),
+				Some(_) => {
+					Err(wasmi::Error::Instantiation("Memory can not be imported twice!".into()))
+				},
 				memory_ref @ None => {
 					if memory_type
 						.maximum()
@@ -441,9 +469,9 @@ impl wasmi::Externals for FunctionExecutor {
 				.map_err(|msg| Error::FunctionExecution(function.name().to_string(), msg))
 				.map_err(wasmi::Trap::from)
 				.map(|v| v.map(Into::into))
-		} else if self.allow_missing_func_imports &&
-			index >= self.host_functions.len() &&
-			index < self.host_functions.len() + self.missing_functions.len()
+		} else if self.allow_missing_func_imports
+			&& index >= self.host_functions.len()
+			&& index < self.host_functions.len() + self.missing_functions.len()
 		{
 			Err(Error::from(format!(
 				"Function `{}` is only a stub. Calling a stub is not allowed.",

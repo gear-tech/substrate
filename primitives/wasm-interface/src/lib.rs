@@ -382,6 +382,15 @@ pub trait Sandbox {
 	///
 	/// Returns `Some(_)` when the requested global variable could be found.
 	fn get_global_val(&self, instance_idx: u32, name: &str) -> Result<Option<Value>>;
+
+	/// Returns size in wasm pages of memory with id `memory_id`.
+	fn memory_size(&mut self, memory_id: MemoryId) -> Result<u32>;
+
+	/// Tries to grow memory size by `pages_num`. Returns memory previous size.
+	fn memory_grow(&mut self, memory_id: MemoryId, pages_num: u32) -> Result<u32>;
+
+	/// Get host pointer to the begin of wasm memory with `memory_id`.
+	fn get_buff(&mut self, memory_id: MemoryId) -> Result<*mut u8>;
 }
 
 if_wasmtime_is_enabled! {

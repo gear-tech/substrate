@@ -38,6 +38,10 @@ pub struct SharedParams {
 	#[clap(long, conflicts_with_all = &["chain"])]
 	pub dev: bool,
 
+	/// Use default execution strategies even if is dev node.
+	#[clap(long)]
+	pub use_default_exec_strateg: bool,
+
 	/// Specify custom base path.
 	#[clap(long, short = 'd', value_name = "PATH", parse(from_os_str))]
 	pub base_path: Option<PathBuf>,
@@ -94,6 +98,11 @@ impl SharedParams {
 	/// Specify the development chain.
 	pub fn is_dev(&self) -> bool {
 		self.dev
+	}
+
+	/// Specify whether use default execution strategies, even in dev node.
+	pub fn is_use_default_exec_strateg(&self) -> bool {
+		self.use_default_exec_strateg
 	}
 
 	/// Get the chain spec for the parameters provided

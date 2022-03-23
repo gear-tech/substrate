@@ -85,11 +85,12 @@ pub fn invoke(
 				wasmer::Val::I64(val) => Value::I64(val),
 				wasmer::Val::F32(val) => Value::F32(f32::to_bits(val)),
 				wasmer::Val::F64(val) => Value::F64(f64::to_bits(val)),
-				_ =>
+				_ => {
 					return Err(Error::Sandbox(format!(
 						"Unsupported return value: {:?}",
 						wasm_value,
-					))),
+					)))
+				},
 			};
 
 			Ok(Some(wasmer_value))
@@ -160,7 +161,7 @@ pub fn instantiate(
 					index
 				} else {
 					// Missing import (should we abort here?)
-					continue
+					continue;
 				};
 
 				let supervisor_func_index = guest_env
@@ -217,8 +218,9 @@ fn dispatch_function(
 					wasmer::Val::I64(val) => Ok(Value::I64(*val)),
 					wasmer::Val::F32(val) => Ok(Value::F32(f32::to_bits(*val))),
 					wasmer::Val::F64(val) => Ok(Value::F64(f64::to_bits(*val))),
-					_ =>
-						Err(RuntimeError::new(format!("Unsupported function argument: {:?}", val))),
+					_ => {
+						Err(RuntimeError::new(format!("Unsupported function argument: {:?}", val)))
+					},
 				})
 				.collect::<std::result::Result<Vec<_>, _>>()?
 				.encode();
@@ -246,7 +248,7 @@ fn dispatch_function(
 					"Failed dealloction after failed write of invoke arguments",
 				)?;
 
-				return Err(RuntimeError::new("Can't write invoke args into memory"))
+				return Err(RuntimeError::new("Can't write invoke args into memory"));
 			}
 
 			// Perform the actuall call
@@ -431,6 +433,25 @@ impl MemoryTransfer for MemoryWrapper {
 			destination[range].copy_from_slice(source);
 			Ok(())
 		}
+	}
+
+	fn memory_grow(&mut self, pages: u32) -> Result<u32> {
+		let memory = &mut self.buffer.borrow_mut();
+		memory
+			.grow(pages)
+			.map_err(|e| {
+				Error::Sandbox(format!("Connot grow memory in wasmer sandbox executor: {}", e))
+			})
+			.map(|p| p.0)
+	}
+
+	fn memory_size(&mut self) -> u32 {
+		let memory = &mut self.buffer.borrow_mut();
+		memory.size().0
+	}
+
+	fn get_buff(&mut self) -> *mut u8 {
+		self.buffer.borrow_mut().data_ptr()
 	}
 }
 

@@ -100,6 +100,20 @@ impl super::SandboxMemory for Memory {
 			_ => unreachable!(),
 		}
 	}
+
+	fn grow(&self, pages: u32) -> Result<u32, Error> {
+		let size = self.size();
+		sandbox::memory_grow(self.handle.memory_idx, pages);
+		Ok(size)
+	}
+
+	fn size(&self) -> u32 {
+		sandbox::memory_size(self.handle.memory_idx)
+	}
+
+	unsafe fn get_buff(&self) -> u64 {
+		sandbox::get_buff(self.handle.memory_idx)
+	}
 }
 
 /// A builder for the environment of the sandboxed WASM module.
