@@ -52,10 +52,10 @@ pub mod embedded_executor;
 #[cfg(not(feature = "std"))]
 pub mod host_executor;
 
-#[cfg(all(feature = "wasmer-sandbox", not(feature = "std")))]
+#[cfg(all(feature = "host-sandbox", not(feature = "std")))]
 pub use host_executor as default_executor;
 
-#[cfg(not(all(feature = "wasmer-sandbox", not(feature = "std"))))]
+#[cfg(not(all(feature = "host-sandbox", not(feature = "std"))))]
 pub use embedded_executor as default_executor;
 
 /// Error that can occur while using this crate.
@@ -125,6 +125,9 @@ pub trait SandboxMemory: Sized + Clone {
 	///
 	/// Maximum memory size cannot exceed 65536 pages or 4GiB.
 	fn size(&self) -> u32;
+
+	/// Returns pointer to the begin of wasm mem buffer
+	unsafe fn get_buff(&self) -> u64;
 }
 
 /// Struct that can be used for defining an environment for a sandboxed module.

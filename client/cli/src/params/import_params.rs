@@ -96,10 +96,14 @@ impl ImportParams {
 	}
 
 	/// Get execution strategies for the parameters
-	pub fn execution_strategies(&self, is_dev: bool, is_validator: bool) -> ExecutionStrategies {
+	pub fn execution_strategies(&self, is_dev: bool, is_use_default_exec_strateg: bool, is_validator: bool) -> ExecutionStrategies {
 		let exec = &self.execution_strategies;
 		let exec_all_or = |strat: Option<ExecutionStrategy>, default: ExecutionStrategy| {
-			let default = if is_dev { ExecutionStrategy::Native } else { default };
+			let default = if is_use_default_exec_strateg || !is_dev {
+				default
+			} else {
+				ExecutionStrategy::Native
+			};
 
 			exec.execution.unwrap_or_else(|| strat.unwrap_or(default)).into()
 		};

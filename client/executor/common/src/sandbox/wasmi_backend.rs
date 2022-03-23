@@ -29,7 +29,7 @@ use wasmi::{
 };
 
 use crate::{
-	error::{self, Error},
+	error::{self, Error, Result},
 	sandbox::{
 		BackendInstance, GuestEnvironment, GuestExternals, GuestFuncIndex, Imports,
 		InstantiationError, Memory, SandboxContext, SandboxInstance,
@@ -153,6 +153,21 @@ impl MemoryTransfer for MemoryWrapper {
 			destination[range].copy_from_slice(source);
 			Ok(())
 		})
+	}
+
+	fn memory_grow(&mut self, pages: u32) -> Result<u32> {
+		self.0
+			.grow(Pages(pages as usize))
+			.map_err(|e| Error::Sandbox(format!("Cannot grow memory in masmi sandbox executor: {}", e)))
+			.map(|p| p.0 as u32)
+	}
+
+	fn memory_size(&mut self) -> u32 {
+		self.0.current_size().0 as u32
+	}
+
+	fn get_buff(&mut self) -> *mut u8 {
+		self.0.direct_access_mut().as_mut().as_mut_ptr()
 	}
 }
 

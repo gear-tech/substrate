@@ -43,4 +43,4 @@ std = [
 	"log/std",
 ]
 strict = []
-wasmer-sandbox = []
+host-sandbox = []
