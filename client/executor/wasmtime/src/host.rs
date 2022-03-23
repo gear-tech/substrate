@@ -30,7 +30,7 @@ use sc_executor_common::{
 	util::MemoryTransfer,
 };
 use sp_sandbox::env as sandbox_env;
-use sp_wasm_interface::{FunctionContext, MemoryId, Pointer, Sandbox, WordSize};
+use sp_wasm_interface::{FunctionContext, MemoryId, Pointer, Result as WResult, Sandbox, WordSize};
 
 use crate::{runtime::StoreData, util};
 
@@ -328,6 +328,26 @@ impl<'a> Sandbox for HostContext<'a> {
 			.instance(instance_idx)
 			.map(|i| i.get_global_val(name))
 			.map_err(|e| e.to_string())
+	}
+
+	fn memory_size(&mut self, memory_id: MemoryId) -> WResult<u32> {
+		let mut m = self
+			.sandbox_store()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		Ok(m.memory_size())
+	}
+
+	fn memory_grow(&mut self, memory_id: MemoryId, pages_num: u32) -> WResult<u32> {
+		let mut m = self.sandbox_store().memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		m.memory_grow(pages_num).map_err(|e| format!("{}", e))
+	}
+
+	fn get_buff(&mut self, memory_id: MemoryId) -> WResult<*mut u8> {
+		let mut m = self.sandbox_store().memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		Ok(m.get_buff())
 	}
 }
 

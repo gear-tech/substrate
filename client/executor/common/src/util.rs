@@ -49,4 +49,15 @@ pub trait MemoryTransfer {
 	///
 	/// Returns an error if the write would go out of the memory bounds.
 	fn write_from(&self, dest_addr: Pointer<u8>, source: &[u8]) -> Result<()>;
+
+	/// Grow memory by `pages`.
+	///
+	/// Returns memory prev size.
+	fn memory_grow(&mut self, pages: u32) -> Result<u32>;
+
+	/// Returns memory size in pages.
+	fn memory_size(&mut self) -> u32;
+
+	/// Returns host pointer to the wasm memory buffer.
+	fn get_buff(&mut self) -> *mut u8;
 }

@@ -432,6 +432,25 @@ impl MemoryTransfer for MemoryWrapper {
 			Ok(())
 		}
 	}
+
+	fn memory_grow(&mut self, pages: u32) -> Result<u32> {
+		let memory = &mut self.buffer.borrow_mut();
+		memory
+			.grow(pages)
+			.map_err(|e| {
+				Error::Sandbox(format!("Cannot grow memory in wasmer sandbox executor: {}", e))
+			})
+			.map(|p| p.0)
+	}
+
+	fn memory_size(&mut self) -> u32 {
+		let memory = &mut self.buffer.borrow_mut();
+		memory.size().0
+	}
+
+	fn get_buff(&mut self) -> *mut u8 {
+		self.buffer.borrow_mut().data_ptr()
+	}
 }
 
 /// Get global value by name

@@ -385,6 +385,33 @@ impl util::MemoryTransfer for Memory {
 			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.write_from(dest_addr, source),
 		}
 	}
+
+	fn memory_grow(&mut self, pages: u32) -> Result<u32> {
+		match self {
+			Memory::Wasmi(sandboxed_memory) => sandboxed_memory.memory_grow(pages),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.memory_grow(pages),
+		}
+	}
+
+	fn memory_size(&mut self) -> u32 {
+		match self {
+			Memory::Wasmi(sandboxed_memory) => sandboxed_memory.memory_size(),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.memory_size(),
+		}
+	}
+
+	fn get_buff(&mut self) -> *mut u8 {
+		match self {
+			Memory::Wasmi(sandboxed_memory) => sandboxed_memory.get_buff(),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.get_buff(),
+		}
+	}
 }
 
 /// Information specific to a particular execution backend

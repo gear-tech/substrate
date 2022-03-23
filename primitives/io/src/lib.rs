@@ -1655,6 +1655,24 @@ pub trait Sandbox {
 			.get_global_val(instance_idx, name)
 			.expect("Failed to get global from sandbox")
 	}
+
+	fn memory_grow(&mut self, memory_idx: u32, size: u32) -> u32 {
+		self.sandbox()
+			.memory_grow(memory_idx, size)
+			.expect("Failed to grow memory from sandbox")
+	}
+
+	fn memory_size(&mut self, memory_idx: u32) -> u32 {
+		self.sandbox()
+			.memory_size(memory_idx)
+			.expect("Failed to get memory size from sandbox")
+	}
+
+	fn get_buff(&mut self, memory_idx: u32) -> u64 {
+		self.sandbox()
+			.get_buff(memory_idx)
+			.expect("Failed to get wasmo memory buffer addr from sandbox") as u64
+	}
 }
 
 /// Wasm host functions for managing tasks.
