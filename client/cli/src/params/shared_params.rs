@@ -22,7 +22,7 @@ use sc_service::config::BasePath;
 use std::path::PathBuf;
 
 /// Shared parameters used by all `CoreParams`.
-#[derive(Debug, Clone, Args)]
+#[derive(Debug, Clone, PartialEq, Args)]
 pub struct SharedParams {
 	/// Specify the chain specification.
 	///
@@ -38,6 +38,10 @@ pub struct SharedParams {
 	#[clap(long, conflicts_with_all = &["chain"])]
 	pub dev: bool,
 
+	/// Use default execution strategies even if is dev node.
+	#[clap(long)]
+	pub use_default_exec_strateg: bool,
+
 	/// Specify custom base path.
 	#[clap(long, short = 'd', value_name = "PATH", parse(from_os_str))]
 	pub base_path: Option<PathBuf>,
@@ -46,7 +50,7 @@ pub struct SharedParams {
 	///
 	/// Log levels (least to most verbose) are error, warn, info, debug, and trace.
 	/// By default, all targets log `info`. The global log level can be set with -l<level>.
-	#[clap(short = 'l', long, value_name = "LOG_PATTERN")]
+	#[clap(short = 'l', long, value_name = "LOG_PATTERN", multiple_values(true))]
 	pub log: Vec<String>,
 
 	/// Enable detailed log output.
@@ -89,6 +93,11 @@ impl SharedParams {
 	/// Specify the development chain.
 	pub fn is_dev(&self) -> bool {
 		self.dev
+	}
+
+	/// Specify whether use default execution strategies, even in dev node.
+	pub fn is_use_default_exec_strateg(&self) -> bool {
+		self.use_default_exec_strateg
 	}
 
 	/// Get the chain spec for the parameters provided

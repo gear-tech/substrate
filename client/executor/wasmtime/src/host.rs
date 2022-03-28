@@ -29,7 +29,7 @@ use sc_executor_common::{
 	util::MemoryTransfer,
 };
 use sp_core::sandbox as sandbox_primitives;
-use sp_wasm_interface::{FunctionContext, MemoryId, Pointer, Sandbox, WordSize};
+use sp_wasm_interface::{FunctionContext, MemoryId, Pointer, Result as WResult, Sandbox, WordSize};
 use wasmtime::{Caller, Func, Val};
 
 // The sandbox store is inside of a Option<Box<..>>> so that we can temporarily borrow it.
@@ -169,7 +169,7 @@ impl<'a> Sandbox for HostContext<'a> {
 		};
 
 		if util::write_memory_from(&mut self.caller, buf_ptr, &buffer).is_err() {
-			return Ok(sandbox_primitives::ERR_OUT_OF_BOUNDS)
+			return Ok(sandbox_primitives::ERR_OUT_OF_BOUNDS);
 		}
 
 		Ok(sandbox_primitives::ERR_OK)
@@ -192,7 +192,7 @@ impl<'a> Sandbox for HostContext<'a> {
 		};
 
 		if sandboxed_memory.write_from(Pointer::new(offset as u32), &buffer).is_err() {
-			return Ok(sandbox_primitives::ERR_OUT_OF_BOUNDS)
+			return Ok(sandbox_primitives::ERR_OUT_OF_BOUNDS);
 		}
 
 		Ok(sandbox_primitives::ERR_OK)
@@ -332,6 +332,26 @@ impl<'a> Sandbox for HostContext<'a> {
 			.map(|i| i.get_global_val(name))
 			.map_err(|e| e.to_string())
 	}
+
+	fn memory_size(&mut self, memory_id: MemoryId) -> WResult<u32> {
+		let mut m = self
+			.sandbox_store()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		Ok(m.memory_size())
+	}
+
+	fn memory_grow(&mut self, memory_id: MemoryId, pages_num: u32) -> WResult<u32> {
+		let mut m = self.sandbox_store().memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		m.memory_grow(pages_num).map_err(|e| format!("{}", e))
+	}
+
+	fn get_buff(&mut self, memory_id: MemoryId) -> WResult<*mut u8> {
+		let mut m = self.sandbox_store().memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		Ok(m.get_buff())
+	}
 }
 
 struct SandboxContext<'a, 'b> {
@@ -360,12 +380,13 @@ impl<'a, 'b> sandbox::SandboxContext for SandboxContext<'a, 'b> {
 		);
 
 		match result {
-			Ok(()) =>
+			Ok(()) => {
 				if let Some(ret_val) = ret_vals[0].i64() {
 					Ok(ret_val)
 				} else {
-					return Err("Supervisor function returned unexpected result!".into())
-				},
+					return Err("Supervisor function returned unexpected result!".into());
+				}
+			},
 			Err(err) => Err(err.to_string().into()),
 		}
 	}
