@@ -134,7 +134,6 @@ pub trait SandboxContext {
 		&mut self,
 		invoke_args_ptr: Pointer<u8>,
 		invoke_args_len: WordSize,
-		state: u32,
 		func_idx: SupervisorFuncIndex,
 	) -> Result<i64>;
 
@@ -149,9 +148,6 @@ pub trait SandboxContext {
 pub struct GuestExternals<'a> {
 	/// Instance of sandboxed module to be dispatched
 	sandbox_instance: &'a SandboxInstance,
-
-	/// External state passed to guest environment, see the `instantiate` function
-	state: u32,
 }
 
 /// Module instance in terms of selected backend
@@ -188,23 +184,21 @@ impl SandboxInstance {
 	///
 	/// `supervisor_externals` is required to execute the implementations
 	/// of the syscalls that published to a sandboxed module instance.
-	///
-	/// The `state` parameter can be used to provide custom data for
-	/// these syscall implementations.
 	pub fn invoke(
 		&self,
 		export_name: &str,
 		args: &[sp_wasm_interface::Value],
-		state: u32,
 		sandbox_context: &mut dyn SandboxContext,
 	) -> std::result::Result<Option<sp_wasm_interface::Value>, error::Error> {
 		match &self.backend_instance {
-			BackendInstance::Wasmi(wasmi_instance) =>
-				wasmi_invoke(self, wasmi_instance, export_name, args, state, sandbox_context),
+			BackendInstance::Wasmi(wasmi_instance) => {
+				wasmi_invoke(self, wasmi_instance, export_name, args, sandbox_context)
+			},
 
 			#[cfg(feature = "wasmer-sandbox")]
-			BackendInstance::Wasmer(wasmer_instance) =>
-				wasmer_invoke(wasmer_instance, export_name, args, state, sandbox_context),
+			BackendInstance::Wasmer(wasmer_instance) => {
+				wasmer_invoke(wasmer_instance, export_name, args, sandbox_context)
+			},
 		}
 	}
 
@@ -447,8 +441,9 @@ impl BackendContext {
 			SandboxBackend::TryWasmer => BackendContext::Wasmi,
 
 			#[cfg(feature = "wasmer-sandbox")]
-			SandboxBackend::Wasmer | SandboxBackend::TryWasmer =>
-				BackendContext::Wasmer(WasmerBackend::new()),
+			SandboxBackend::Wasmer | SandboxBackend::TryWasmer => {
+				BackendContext::Wasmer(WasmerBackend::new())
+			},
 		}
 	}
 }
@@ -587,8 +582,7 @@ impl<DT: Clone> Store<DT> {
 	///
 	/// The guest module's code is specified in `wasm`. Environment that will be available to
 	/// guest module is specified in `guest_env`. A dispatch thunk is used as function that
-	/// handle calls from guests. `state` is an opaque pointer to caller's arbitrary context
-	/// normally created by `sp_sandbox::Instance` primitive.
+	/// handle calls from guests.
 	///
 	/// Note: Due to borrowing constraints dispatch thunk is now propagated using DTH
 	///
@@ -597,15 +591,15 @@ impl<DT: Clone> Store<DT> {
 		&mut self,
 		wasm: &[u8],
 		guest_env: GuestEnvironment,
-		state: u32,
 		sandbox_context: &mut dyn SandboxContext,
 	) -> std::result::Result<UnregisteredInstance, InstantiationError> {
 		let sandbox_instance = match self.backend_context {
-			BackendContext::Wasmi => wasmi_instantiate(wasm, guest_env, state, sandbox_context)?,
+			BackendContext::Wasmi => wasmi_instantiate(wasm, guest_env, sandbox_context)?,
 
 			#[cfg(feature = "wasmer-sandbox")]
-			BackendContext::Wasmer(ref context) =>
-				wasmer_instantiate(&context, wasm, guest_env, state, sandbox_context)?,
+			BackendContext::Wasmer(ref context) => {
+				wasmer_instantiate(&context, wasm, guest_env, sandbox_context)?
+			},
 		};
 
 		Ok(UnregisteredInstance { sandbox_instance })

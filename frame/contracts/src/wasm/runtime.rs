@@ -475,8 +475,11 @@ where
 			// a trap for now. Eventually, we might want to revisit this.
 			Err(sp_sandbox::Error::Module) => Err("validation error")?,
 			// Any other kind of a trap should result in a failure.
-			Err(sp_sandbox::Error::Execution) | Err(sp_sandbox::Error::OutOfBounds) =>
-				Err(Error::<E::T>::ContractTrapped)?,
+			Err(sp_sandbox::Error::Execution)
+			| Err(sp_sandbox::Error::OutOfBounds)
+			| Err(sp_sandbox::Error::MemoryGrow) => {
+				Err(Error::<E::T>::ContractTrapped)?
+			},
 		}
 	}
 
