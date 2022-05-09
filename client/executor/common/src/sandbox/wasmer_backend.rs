@@ -114,8 +114,11 @@ fn get_cached_module(
 	wasm: &[u8],
 	store: &wasmer::Store,
 ) -> core::result::Result<Module, CachedModuleErr> {
+	let mut cache_path = std::env::temp_dir();
+	cache_path.push("substrate-wasmer-cache");
+	cache_path.push(wasmer::VERSION);
 	let fs_cache =
-		FileSystemCache::new("/tmp/substrate-wasmer-cache").map_err(|_| FileSystemErr)?;
+		FileSystemCache::new(cache_path).map_err(|_| FileSystemErr)?;
 	let code_hash = Hash::generate(wasm);
 	unsafe { fs_cache.load(store, code_hash).map_err(|_| ModuleLoadErr(fs_cache, code_hash)) }
 }
