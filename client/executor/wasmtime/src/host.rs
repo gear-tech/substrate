@@ -344,17 +344,13 @@ impl<'a> Sandbox for HostContext<'a> {
 	}
 
 	fn memory_grow(&mut self, memory_id: MemoryId, pages_num: u32) -> WResult<u32> {
-		let mut m = self
-			.sandbox_store()
-			.memory(memory_id)
+		let mut m = self.sandbox_store().memory(memory_id)
 			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
 		m.memory_grow(pages_num).map_err(|e| format!("{}", e))
 	}
 
 	fn get_buff(&mut self, memory_id: MemoryId) -> WResult<*mut u8> {
-		let mut m = self
-			.sandbox_store()
-			.memory(memory_id)
+		let mut m = self.sandbox_store().memory(memory_id)
 			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
 		Ok(m.get_buff())
 	}

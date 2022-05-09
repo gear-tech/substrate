@@ -191,14 +191,12 @@ impl SandboxInstance {
 		sandbox_context: &mut dyn SandboxContext,
 	) -> std::result::Result<Option<sp_wasm_interface::Value>, error::Error> {
 		match &self.backend_instance {
-			BackendInstance::Wasmi(wasmi_instance) => {
-				wasmi_invoke(self, wasmi_instance, export_name, args, sandbox_context)
-			},
+			BackendInstance::Wasmi(wasmi_instance) =>
+				wasmi_invoke(self, wasmi_instance, export_name, args, sandbox_context),
 
 			#[cfg(feature = "wasmer-sandbox")]
-			BackendInstance::Wasmer(wasmer_instance) => {
-				wasmer_invoke(wasmer_instance, export_name, args, sandbox_context)
-			},
+			BackendInstance::Wasmer(wasmer_instance) =>
+				wasmer_invoke(wasmer_instance, export_name, args, sandbox_context),
 		}
 	}
 
@@ -441,9 +439,8 @@ impl BackendContext {
 			SandboxBackend::TryWasmer => BackendContext::Wasmi,
 
 			#[cfg(feature = "wasmer-sandbox")]
-			SandboxBackend::Wasmer | SandboxBackend::TryWasmer => {
-				BackendContext::Wasmer(WasmerBackend::new())
-			},
+			SandboxBackend::Wasmer | SandboxBackend::TryWasmer =>
+				BackendContext::Wasmer(WasmerBackend::new()),
 		}
 	}
 }
@@ -597,9 +594,8 @@ impl<DT: Clone> Store<DT> {
 			BackendContext::Wasmi => wasmi_instantiate(wasm, guest_env, sandbox_context)?,
 
 			#[cfg(feature = "wasmer-sandbox")]
-			BackendContext::Wasmer(ref context) => {
-				wasmer_instantiate(&context, wasm, guest_env, sandbox_context)?
-			},
+			BackendContext::Wasmer(ref context) =>
+				wasmer_instantiate(&context, wasm, guest_env, sandbox_context)?,
 		};
 
 		Ok(UnregisteredInstance { sandbox_instance })

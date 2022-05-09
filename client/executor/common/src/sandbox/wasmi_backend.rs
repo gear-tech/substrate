@@ -158,9 +158,7 @@ impl MemoryTransfer for MemoryWrapper {
 	fn memory_grow(&mut self, pages: u32) -> Result<u32> {
 		self.0
 			.grow(Pages(pages as usize))
-			.map_err(|e| {
-				Error::Sandbox(format!("Cannot grow memory in masmi sandbox executor: {}", e))
-			})
+			.map_err(|e| Error::Sandbox(format!("Cannot grow memory in masmi sandbox executor: {}", e)))
 			.map(|p| p.0 as u32)
 	}
 
