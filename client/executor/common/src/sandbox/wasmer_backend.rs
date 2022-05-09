@@ -117,6 +117,7 @@ fn get_cached_module(
 	let mut cache_path = std::env::temp_dir();
 	cache_path.push("substrate-wasmer-cache");
 	cache_path.push(wasmer::VERSION);
+	log::trace!("Wasmer sandbox cache dir is: {:?}", cache_path);
 	let fs_cache =
 		FileSystemCache::new(cache_path).map_err(|_| FileSystemErr)?;
 	let code_hash = Hash::generate(wasm);
@@ -126,7 +127,7 @@ fn get_cached_module(
 #[cfg(feature = "wasmer-cache")]
 fn try_to_store_module_in_cache(mut fs_cache: FileSystemCache, code_hash: Hash, module: &Module) {
 	let res = fs_cache.store(code_hash, &module.clone());
-	log::debug!("Store module cache with result: {:?}", res);
+	log::trace!("Store module cache with result: {:?}", res);
 }
 
 /// Instantiate a module within a sandbox context
@@ -139,11 +140,11 @@ pub fn instantiate(
 	#[cfg(feature = "wasmer-cache")]
 	let module = match get_cached_module(wasm, &context.store) {
 		Ok(module) => {
-			log::debug!("Found cached module for current contract");
+			log::trace!("Found cached module for current contract");
 			module
 		},
 		Err(err) => {
-			log::debug!("Cache for contract has not been found, so compile it now");
+			log::trace!("Cache for contract has not been found, so compile it now");
 			let module = wasmer::Module::new(&context.store, wasm)
 				.map_err(|_| InstantiationError::ModuleDecoding)?;
 			match err {
