@@ -503,7 +503,7 @@ where
 			// a trap for now. Eventually, we might want to revisit this.
 			Err(sp_sandbox::Error::Module) => return Err("validation error".into()),
 			// Any other kind of a trap should result in a failure.
-			Err(sp_sandbox::Error::Execution) | Err(sp_sandbox::Error::OutOfBounds) =>
+			Err(sp_sandbox::Error::Execution) | Err(sp_sandbox::Error::OutOfBounds) | Err(sp_sandbox::Error::MemoryGrow) =>
 				return Err(Error::<E::T>::ContractTrapped.into()),
 		}
 	}
