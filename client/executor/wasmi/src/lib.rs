@@ -80,6 +80,8 @@ impl FunctionExecutor {
 struct SandboxContext<'a> {
 	executor: &'a mut FunctionExecutor,
 	dispatch_thunk: wasmi::FuncRef,
+	/// Custom data to propagate it in supervisor export functions
+	state: u32,
 }
 
 impl<'a> sandbox::SandboxContext for SandboxContext<'a> {
@@ -87,7 +89,6 @@ impl<'a> sandbox::SandboxContext for SandboxContext<'a> {
 		&mut self,
 		invoke_args_ptr: Pointer<u8>,
 		invoke_args_len: WordSize,
-		state: u32,
 		func_idx: sandbox::SupervisorFuncIndex,
 	) -> Result<i64, Error> {
 		let result = wasmi::FuncInstance::invoke(
@@ -95,7 +96,7 @@ impl<'a> sandbox::SandboxContext for SandboxContext<'a> {
 			&[
 				RuntimeValue::I32(u32::from(invoke_args_ptr) as i32),
 				RuntimeValue::I32(invoke_args_len as i32),
-				RuntimeValue::I32(state as i32),
+				RuntimeValue::I32(self.state as i32),
 				RuntimeValue::I32(usize::from(func_idx) as i32),
 			],
 			self.executor,
@@ -235,8 +236,7 @@ impl Sandbox for FunctionExecutor {
 		match instance.invoke(
 			export_name,
 			&args,
-			state,
-			&mut SandboxContext { dispatch_thunk, executor: self },
+			&mut SandboxContext { dispatch_thunk, executor: self, state },
 		) {
 			Ok(None) => Ok(sandbox_env::ERR_OK),
 			Ok(Some(val)) => {
@@ -289,8 +289,7 @@ impl Sandbox for FunctionExecutor {
 		let result = store.borrow_mut().instantiate(
 			wasm,
 			guest_env,
-			state,
-			&mut SandboxContext { executor: self, dispatch_thunk: dispatch_thunk.clone() },
+			&mut SandboxContext { executor: self, dispatch_thunk: dispatch_thunk.clone(), state },
 		);
 
 		let instance_idx_or_err_code =
