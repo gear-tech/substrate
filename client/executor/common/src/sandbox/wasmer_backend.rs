@@ -27,7 +27,10 @@ use codec::{Decode, Encode};
 use sp_core::sandbox::HostError;
 use sp_wasm_interface::{FunctionContext, Pointer, ReturnValue, Value, WordSize};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use wasmer::RuntimeError;
+use wasmer::{Module, RuntimeError};
+
+#[cfg(feature = "wasmer-cache")]
+use wasmer_cache::{Cache, FileSystemCache, Hash};
 
 use crate::sandbox::{
 	BackendInstance, GuestEnvironment, InstantiationError, SandboxContext, SandboxInstance,
@@ -43,9 +46,7 @@ pub struct Backend {
 
 impl Backend {
 	pub fn new() -> Self {
-		let compiler = wasmer_compiler_singlepass::Singlepass::default();
-
-		Backend { store: wasmer::Store::new(&wasmer::JIT::new(compiler).engine()) }
+		Backend { store: wasmer::Store::default() }
 	}
 }
 
@@ -54,7 +55,6 @@ pub fn invoke(
 	instance: &wasmer::Instance,
 	export_name: &str,
 	args: &[Value],
-	_state: u32,
 	sandbox_context: &mut dyn SandboxContext,
 ) -> std::result::Result<Option<Value>, Error> {
 	let function = instance
@@ -100,14 +100,64 @@ pub fn invoke(
 	}
 }
 
+#[cfg(feature = "wasmer-cache")]
+enum CachedModuleErr {
+	FileSystemErr,
+	ModuleLoadErr(FileSystemCache, Hash),
+}
+
+#[cfg(feature = "wasmer-cache")]
+use CachedModuleErr::*;
+
+#[cfg(feature = "wasmer-cache")]
+fn get_cached_module(
+	wasm: &[u8],
+	store: &wasmer::Store,
+) -> core::result::Result<Module, CachedModuleErr> {
+	let mut cache_path = std::env::temp_dir();
+	cache_path.push("substrate-wasmer-cache");
+	cache_path.push(wasmer::VERSION);
+	log::trace!("Wasmer sandbox cache dir is: {:?}", cache_path);
+	let fs_cache =
+		FileSystemCache::new(cache_path).map_err(|_| FileSystemErr)?;
+	let code_hash = Hash::generate(wasm);
+	unsafe { fs_cache.load(store, code_hash).map_err(|_| ModuleLoadErr(fs_cache, code_hash)) }
+}
+
+#[cfg(feature = "wasmer-cache")]
+fn try_to_store_module_in_cache(mut fs_cache: FileSystemCache, code_hash: Hash, module: &Module) {
+	let res = fs_cache.store(code_hash, &module.clone());
+	log::trace!("Store module cache with result: {:?}", res);
+}
+
 /// Instantiate a module within a sandbox context
 pub fn instantiate(
 	context: &Backend,
 	wasm: &[u8],
 	guest_env: GuestEnvironment,
-	state: u32,
 	sandbox_context: &mut dyn SandboxContext,
 ) -> std::result::Result<Rc<SandboxInstance>, InstantiationError> {
+	#[cfg(feature = "wasmer-cache")]
+	let module = match get_cached_module(wasm, &context.store) {
+		Ok(module) => {
+			log::trace!("Found cached module for current contract");
+			module
+		},
+		Err(err) => {
+			log::trace!("Cache for contract has not been found, so compile it now");
+			let module = wasmer::Module::new(&context.store, wasm)
+				.map_err(|_| InstantiationError::ModuleDecoding)?;
+			match err {
+				CachedModuleErr::FileSystemErr => log::error!("Cannot open fs cache"),
+				CachedModuleErr::ModuleLoadErr(fs_cache, code_hash) => {
+					try_to_store_module_in_cache(fs_cache, code_hash, &module)
+				},
+			};
+			module
+		},
+	};
+
+	#[cfg(not(feature = "wasmer-cache"))]
 	let module = wasmer::Module::new(&context.store, wasm)
 		.map_err(|_| InstantiationError::ModuleDecoding)?;
 
@@ -169,8 +219,7 @@ pub fn instantiate(
 					.func_by_guest_index(guest_func_index)
 					.ok_or(InstantiationError::ModuleDecoding)?;
 
-				let function =
-					dispatch_function(supervisor_func_index, &context.store, func_ty, state);
+				let function = dispatch_function(supervisor_func_index, &context.store, func_ty);
 
 				let exports = exports_map
 					.entry(import.module().to_string())
@@ -193,6 +242,9 @@ pub fn instantiate(
 			wasmer::InstantiationError::HostEnvInitialization(_) => {
 				InstantiationError::EnvironmentDefinitionCorrupted
 			},
+			wasmer::InstantiationError::CpuFeature(_) => {
+				InstantiationError::EnvironmentDefinitionCorrupted
+			},
 		})
 	})?;
 
@@ -206,7 +258,6 @@ fn dispatch_function(
 	supervisor_func_index: SupervisorFuncIndex,
 	store: &wasmer::Store,
 	func_ty: &wasmer::FunctionType,
-	state: u32,
 ) -> wasmer::Function {
 	wasmer::Function::new(store, func_ty, move |params| {
 		SandboxContextStore::with(|sandbox_context| {
@@ -253,7 +304,7 @@ fn dispatch_function(
 
 			// Perform the actuall call
 			let serialized_result = sandbox_context
-				.invoke(invoke_args_ptr, invoke_args_len, state, supervisor_func_index)
+				.invoke(invoke_args_ptr, invoke_args_len, supervisor_func_index)
 				.map_err(|e| RuntimeError::new(e.to_string()));
 
 			deallocate(
