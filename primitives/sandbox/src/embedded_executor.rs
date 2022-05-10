@@ -58,14 +58,14 @@ impl super::SandboxMemory for Memory {
 		Ok(())
 	}
 
-	pub fn grow(&self, pages: u32) -> Result<u32, Error> {
+	fn grow(&self, pages: u32) -> Result<u32, Error> {
 		self.memref
 			.grow(Pages(pages as usize))
 			.map(|prev| (prev.0 as u32))
 			.map_err(|_| Error::MemoryGrow)
 	}
 
-	pub fn size(&self) -> u32 {
+	fn size(&self) -> u32 {
 		self.memref.current_size().0 as u32
 	}
 }

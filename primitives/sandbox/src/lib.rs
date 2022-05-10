@@ -120,12 +120,12 @@ pub trait SandboxMemory: Sized + Clone {
 	/// Grow memory with provided number of pages.
 	///
 	/// Returns `Err` if attempted to allocate more memory than permited by the limit.
-	pub fn grow(&self, pages: u32) -> Result<u32, Error>;
+	fn grow(&self, pages: u32) -> Result<u32, Error>;
 
 	/// Returns current memory size.
 	///
 	/// Maximum memory size cannot exceed 65536 pages or 4GiB.
-	pub fn size(&self) -> u32;
+	fn size(&self) -> u32;
 }
 
 /// Struct that can be used for defining an environment for a sandboxed module.
