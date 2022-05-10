@@ -201,8 +201,6 @@ impl<'a> wasmi::Externals for GuestExternals<'a> {
 				.collect::<Vec<_>>()
 				.encode();
 
-			let state = self.state;
-
 			// Move serialized arguments inside the memory, invoke dispatch thunk and
 			// then free allocated memory.
 			let invoke_args_len = invoke_args_data.len() as WordSize;
@@ -231,7 +229,6 @@ impl<'a> wasmi::Externals for GuestExternals<'a> {
 			let result = sandbox_context.invoke(
 				invoke_args_ptr,
 				invoke_args_len,
-				state,
 				func_idx,
 			);
 
@@ -279,18 +276,17 @@ impl<'a> wasmi::Externals for GuestExternals<'a> {
 	}
 }
 
-fn with_guest_externals<R, F>(sandbox_instance: &SandboxInstance, state: u32, f: F) -> R
+fn with_guest_externals<R, F>(sandbox_instance: &SandboxInstance, f: F) -> R
 where
 	F: FnOnce(&mut GuestExternals) -> R,
 {
-	f(&mut GuestExternals { sandbox_instance, state })
+	f(&mut GuestExternals { sandbox_instance })
 }
 
 /// Instantiate a module within a sandbox context
 pub fn instantiate(
 	wasm: &[u8],
 	guest_env: GuestEnvironment,
-	state: u32,
 	sandbox_context: &mut dyn SandboxContext,
 ) -> std::result::Result<Rc<SandboxInstance>, InstantiationError> {
 	let wasmi_module = Module::from_buffer(wasm).map_err(|_| InstantiationError::ModuleDecoding)?;
@@ -305,7 +301,7 @@ pub fn instantiate(
 		guest_to_supervisor_mapping: guest_env.guest_to_supervisor_mapping,
 	});
 
-	with_guest_externals(&sandbox_instance, state, |guest_externals| {
+	with_guest_externals(&sandbox_instance, |guest_externals| {
 		SandboxContextStore::using(sandbox_context, || {
 			wasmi_instance
 				.run_start(guest_externals)
@@ -322,10 +318,9 @@ pub fn invoke(
 	module: &wasmi::ModuleRef,
 	export_name: &str,
 	args: &[Value],
-	state: u32,
 	sandbox_context: &mut dyn SandboxContext,
 ) -> std::result::Result<Option<Value>, error::Error> {
-	with_guest_externals(instance, state, |guest_externals| {
+	with_guest_externals(instance, |guest_externals| {
 		SandboxContextStore::using(sandbox_context, || {
 			let args = args.iter().cloned().map(Into::into).collect::<Vec<_>>();
 

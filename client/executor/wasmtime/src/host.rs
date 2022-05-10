@@ -233,8 +233,7 @@ impl<'a> Sandbox for HostContext<'a> {
 		let result = instance.invoke(
 			export_name,
 			&args,
-			state,
-			&mut SandboxContext { host_context: self, dispatch_thunk },
+			&mut SandboxContext { host_context: self, dispatch_thunk, state },
 		);
 
 		match result {
@@ -301,8 +300,11 @@ impl<'a> Sandbox for HostContext<'a> {
 			store.instantiate(
 				wasm,
 				guest_env,
-				state,
-				&mut SandboxContext { host_context: self, dispatch_thunk },
+				&mut SandboxContext {
+					host_context: self,
+					dispatch_thunk: dispatch_thunk.clone(),
+					state,
+				},
 			)
 		}));
 
@@ -357,6 +359,8 @@ impl<'a> Sandbox for HostContext<'a> {
 struct SandboxContext<'a, 'b> {
 	host_context: &'a mut HostContext<'b>,
 	dispatch_thunk: Func,
+	/// Custom data to propagate it in supervisor export functions
+	state: u32,
 }
 
 impl<'a, 'b> sandbox::SandboxContext for SandboxContext<'a, 'b> {
@@ -364,7 +368,6 @@ impl<'a, 'b> sandbox::SandboxContext for SandboxContext<'a, 'b> {
 		&mut self,
 		invoke_args_ptr: Pointer<u8>,
 		invoke_args_len: WordSize,
-		state: u32,
 		func_idx: SupervisorFuncIndex,
 	) -> Result<i64> {
 		let mut ret_vals = [Val::null()];
@@ -373,7 +376,7 @@ impl<'a, 'b> sandbox::SandboxContext for SandboxContext<'a, 'b> {
 			&[
 				Val::I32(u32::from(invoke_args_ptr) as i32),
 				Val::I32(invoke_args_len as i32),
-				Val::I32(state as i32),
+				Val::I32(self.state as i32),
 				Val::I32(usize::from(func_idx) as i32),
 			],
 			&mut ret_vals,
