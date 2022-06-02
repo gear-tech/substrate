@@ -8573,6 +8573,7 @@ dependencies = [
  "wasm-instrument",
  "wasmer",
  "wasmer-cache",
+ "wasmer-compiler",
  "wasmi",
 ]
 

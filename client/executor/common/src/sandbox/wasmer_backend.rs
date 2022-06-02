@@ -27,7 +27,10 @@ use codec::{Decode, Encode};
 use sp_core::sandbox::HostError;
 use sp_wasm_interface::{FunctionContext, Pointer, ReturnValue, Value, WordSize};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use wasmer::{Module, RuntimeError};
+use wasmer::RuntimeError;
+
+#[cfg(feature = "wasmer-cache")]
+use wasmer::Module;
 
 #[cfg(feature = "wasmer-cache")]
 use wasmer_cache::{Cache, FileSystemCache, Hash};
@@ -118,8 +121,7 @@ fn get_cached_module(
 	cache_path.push("substrate-wasmer-cache");
 	cache_path.push(wasmer::VERSION);
 	log::trace!("Wasmer sandbox cache dir is: {:?}", cache_path);
-	let fs_cache =
-		FileSystemCache::new(cache_path).map_err(|_| FileSystemErr)?;
+	let fs_cache = FileSystemCache::new(cache_path).map_err(|_| FileSystemErr)?;
 	let code_hash = Hash::generate(wasm);
 	unsafe { fs_cache.load(store, code_hash).map_err(|_| ModuleLoadErr(fs_cache, code_hash)) }
 }

@@ -430,6 +430,19 @@ enum BackendContext {
 	Wasmer(WasmerBackend),
 }
 
+#[cfg(feature = "wasmer-sandbox")]
+fn is_target_suit_for_wasmer() -> bool {
+	use wasmer_compiler::{Architecture, CpuFeature, Target};
+	let target = Target::default();
+	match target.triple().architecture {
+		Architecture::X86_64 =>
+			target.cpu_features().contains(CpuFeature::AVX) ||
+				target.cpu_features().contains(CpuFeature::SSE42),
+		Architecture::Aarch64(_) => true,
+		_ => false,
+	}
+}
+
 impl BackendContext {
 	pub fn new(backend: SandboxBackend) -> BackendContext {
 		match backend {
@@ -439,8 +452,20 @@ impl BackendContext {
 			SandboxBackend::TryWasmer => BackendContext::Wasmi,
 
 			#[cfg(feature = "wasmer-sandbox")]
-			SandboxBackend::Wasmer | SandboxBackend::TryWasmer =>
-				BackendContext::Wasmer(WasmerBackend::new()),
+			SandboxBackend::TryWasmer =>
+				if is_target_suit_for_wasmer() {
+					BackendContext::Wasmer(WasmerBackend::new())
+				} else {
+					BackendContext::Wasmi
+				},
+
+			#[cfg(feature = "wasmer-sandbox")]
+			SandboxBackend::Wasmer =>
+				if is_target_suit_for_wasmer() {
+					BackendContext::Wasmer(WasmerBackend::new())
+				} else {
+					panic!("CPU architecture isn't compatible with `wasmer`")
+				},
 		}
 	}
 }
