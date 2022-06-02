@@ -27,11 +27,13 @@ log = "0.4"
 
 wasmer = { version = "2.2.1", optional = true, default-features = false }
 wasmer-cache = { version = "2.2.1", optional = true }
+wasmer-compiler = { version = "2.2.1", optional = true }
 
 [features]
 default = []
 wasmer-sandbox = [
 	"wasmer",
+	"wasmer-compiler",
 	"wasmer/default-singlepass",
 	"wasmer/default-universal",
 ]
