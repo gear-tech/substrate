@@ -185,7 +185,7 @@ impl<Block: BlockT> GrandpaJustification<Block> {
 			}
 		}
 
-		let ancestry_hashes: HashSet<<Block as sp_runtime::traits::Block>::Hash> =
+		let ancestry_hashes: HashSet<_> =
 			self.votes_ancestries.iter().map(|h: &Block::Header| h.hash()).collect();
 
 		if visited_hashes != ancestry_hashes {

@@ -18,26 +18,21 @@
 
 //! Wasmer specific impls for sandbox
 
-use crate::{
-	error::{Error, Result},
-	sandbox::Memory,
-	util::{checked_range, MemoryTransfer},
-};
-use codec::{Decode, Encode};
-use sp_core::sandbox::HostError;
-use sp_wasm_interface::{FunctionContext, Pointer, ReturnValue, Value, WordSize};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
 use wasmer::RuntimeError;
 
-#[cfg(feature = "wasmer-cache")]
-use wasmer::Module;
+use codec::{Decode, Encode};
+use sp_sandbox::HostError;
+use sp_wasm_interface::{FunctionContext, Pointer, ReturnValue, Value, WordSize};
 
-#[cfg(feature = "wasmer-cache")]
-use wasmer_cache::{Cache, FileSystemCache, Hash};
-
-use crate::sandbox::{
-	BackendInstance, GuestEnvironment, InstantiationError, SandboxContext, SandboxInstance,
-	SupervisorFuncIndex,
+use crate::{
+	error::{Error, Result},
+	sandbox::{
+		BackendInstance, GuestEnvironment, InstantiationError, Memory, SandboxContext,
+		SandboxInstance, SupervisorFuncIndex,
+	},
+	util::{checked_range, MemoryTransfer},
 };
 
 environmental::environmental!(SandboxContextStore: trait SandboxContext);
@@ -49,7 +44,8 @@ pub struct Backend {
 
 impl Backend {
 	pub fn new() -> Self {
-		Backend { store: wasmer::Store::default() }
+		let compiler = wasmer::Singlepass::default();
+		Backend { store: wasmer::Store::new(&wasmer::Universal::new(compiler).engine()) }
 	}
 }
 
@@ -166,7 +162,7 @@ pub fn instantiate(
 	type Exports = HashMap<String, wasmer::Exports>;
 	let mut exports_map = Exports::new();
 
-	for import in module.imports().into_iter() {
+	for import in module.imports() {
 		match import.ty() {
 			// Nothing to do here
 			wasmer::ExternType::Global(_) | wasmer::ExternType::Table(_) => (),
@@ -174,7 +170,7 @@ pub fn instantiate(
 			wasmer::ExternType::Memory(_) => {
 				let exports = exports_map
 					.entry(import.module().to_string())
-					.or_insert(wasmer::Exports::new());
+					.or_insert_with(wasmer::Exports::new);
 
 				let memory = guest_env
 					.imports
@@ -225,7 +221,7 @@ pub fn instantiate(
 
 				let exports = exports_map
 					.entry(import.module().to_string())
-					.or_insert(wasmer::Exports::new());
+					.or_insert_with(wasmer::Exports::new);
 
 				exports.insert(import.name(), wasmer::Extern::Function(function));
 			},
@@ -241,12 +237,9 @@ pub fn instantiate(
 		wasmer::Instance::new(&module, &import_object).map_err(|error| match error {
 			wasmer::InstantiationError::Link(_) => InstantiationError::Instantiation,
 			wasmer::InstantiationError::Start(_) => InstantiationError::StartTrapped,
-			wasmer::InstantiationError::HostEnvInitialization(_) => {
-				InstantiationError::EnvironmentDefinitionCorrupted
-			},
-			wasmer::InstantiationError::CpuFeature(_) => {
-				InstantiationError::EnvironmentDefinitionCorrupted
-			},
+			wasmer::InstantiationError::HostEnvInitialization(_) =>
+				InstantiationError::EnvironmentDefinitionCorrupted,
+			wasmer::InstantiationError::CpuFeature(_) => InstantiationError::CpuFeature,
 		})
 	})?;
 
@@ -506,4 +499,18 @@ impl MemoryTransfer for MemoryWrapper {
 	fn get_buff(&mut self) -> *mut u8 {
 		self.buffer.borrow_mut().data_ptr()
 	}
+}
+
+/// Get global value by name
+pub fn get_global(instance: &wasmer::Instance, name: &str) -> Option<Value> {
+	let global = instance.exports.get_global(name).ok()?;
+	let wasmtime_value = match global.get() {
+		wasmer::Val::I32(val) => Value::I32(val),
+		wasmer::Val::I64(val) => Value::I64(val),
+		wasmer::Val::F32(val) => Value::F32(f32::to_bits(val)),
+		wasmer::Val::F64(val) => Value::F64(f64::to_bits(val)),
+		_ => None?,
+	};
+
+	Some(wasmtime_value)
 }
