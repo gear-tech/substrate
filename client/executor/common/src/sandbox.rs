@@ -554,7 +554,7 @@ impl<DT: Clone> Store<DT> {
 
 			#[cfg(feature = "wasmer-sandbox")]
 			BackendContext::Wasmer(ref context) =>
-				wasmer_instantiate(context, wasm, guest_env, state, sandbox_context)?,
+				wasmer_instantiate(context, wasm, guest_env, sandbox_context)?,
 		};
 
 		Ok(UnregisteredInstance { sandbox_instance })
