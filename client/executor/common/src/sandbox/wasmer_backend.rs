@@ -20,7 +20,7 @@
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use wasmer::RuntimeError;
+use wasmer::{Module, RuntimeError};
 
 use codec::{Decode, Encode};
 use sp_sandbox::HostError;
@@ -98,6 +98,9 @@ pub fn invoke(
 		_ => Err(Error::Sandbox("multiple return types are not supported yet".into())),
 	}
 }
+
+#[cfg(feature = "wasmer-cache")]
+use wasmer_cache::{FileSystemCache, Hash, Cache};
 
 #[cfg(feature = "wasmer-cache")]
 enum CachedModuleErr {
@@ -217,7 +220,7 @@ pub fn instantiate(
 					.func_by_guest_index(guest_func_index)
 					.ok_or(InstantiationError::ModuleDecoding)?;
 
-				let function = dispatch_function(supervisor_func_index, &context.store, func_ty);
+				let function = dispatch_function(supervisor_func_index, &context.store, &func_ty);
 
 				let exports = exports_map
 					.entry(import.module().to_string())
@@ -237,8 +240,9 @@ pub fn instantiate(
 		wasmer::Instance::new(&module, &import_object).map_err(|error| match error {
 			wasmer::InstantiationError::Link(_) => InstantiationError::Instantiation,
 			wasmer::InstantiationError::Start(_) => InstantiationError::StartTrapped,
-			wasmer::InstantiationError::HostEnvInitialization(_) =>
-				InstantiationError::EnvironmentDefinitionCorrupted,
+			wasmer::InstantiationError::HostEnvInitialization(_) => {
+				InstantiationError::EnvironmentDefinitionCorrupted
+			},
 			wasmer::InstantiationError::CpuFeature(_) => InstantiationError::CpuFeature,
 		})
 	})?;
