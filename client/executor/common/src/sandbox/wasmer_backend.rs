@@ -19,7 +19,11 @@
 //! Wasmer specific impls for sandbox
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use wasmer::{Module, RuntimeError};
+
+use wasmer::RuntimeError;
+
+#[cfg(feature = "wasmer-cache")]
+use wasmer::Module;
 
 use codec::{Decode, Encode};
 use sp_sandbox::HostError;
