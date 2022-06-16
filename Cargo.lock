@@ -4914,6 +4914,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-bigint"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f93ab6289c7b344a8a9f60f88d80aa20032336fe78da341afc91c8a2341fc75f"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "num-complex"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4949,7 +4960,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c000134b5dbf44adc5cb772486d335293351644b801551abe8f75c84cfa4aef"
 dependencies = [
  "autocfg 1.0.1",
- "num-bigint",
+ "num-bigint 0.2.6",
  "num-integer",
  "num-traits",
 ]
@@ -4961,6 +4972,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
 dependencies = [
  "autocfg 1.0.1",
+ "num-bigint 0.4.3",
  "num-integer",
  "num-traits",
 ]
@@ -7967,7 +7979,7 @@ dependencies = [
  "futures",
  "log",
  "merlin",
- "num-bigint",
+ "num-bigint 0.2.6",
  "num-rational 0.2.4",
  "num-traits",
  "parity-scale-codec",
@@ -8181,7 +8193,7 @@ dependencies = [
  "tempfile",
  "tracing",
  "tracing-subscriber",
- "wasmi",
+ "wasmi 0.9.1",
  "wat",
 ]
 
@@ -8202,7 +8214,7 @@ dependencies = [
  "wasmer",
  "wasmer-cache",
  "wasmer-compiler",
- "wasmi",
+ "wasmi 0.11.0",
 ]
 
 [[package]]
@@ -8216,7 +8228,7 @@ dependencies = [
  "sp-runtime-interface",
  "sp-sandbox",
  "sp-wasm-interface",
- "wasmi",
+ "wasmi 0.11.0",
 ]
 
 [[package]]
@@ -9463,7 +9475,7 @@ name = "sp-arithmetic-fuzzer"
 version = "2.0.0"
 dependencies = [
  "honggfuzz",
- "num-bigint",
+ "num-bigint 0.2.6",
  "primitive-types",
  "sp-arithmetic",
 ]
@@ -9659,7 +9671,7 @@ dependencies = [
  "substrate-bip39",
  "thiserror",
  "tiny-bip39",
- "wasmi",
+ "wasmi 0.11.0",
  "zeroize",
 ]
 
@@ -9984,7 +9996,7 @@ dependencies = [
  "sp-io",
  "sp-std",
  "sp-wasm-interface",
- "wasmi",
+ "wasmi 0.11.0",
  "wat",
 ]
 
@@ -10189,7 +10201,7 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "sp-std",
- "wasmi",
+ "wasmi 0.11.0",
  "wasmtime",
 ]
 
@@ -11619,9 +11631,23 @@ dependencies = [
  "downcast-rs",
  "errno",
  "libc",
- "libm",
  "memory_units",
  "num-rational 0.2.4",
+ "num-traits",
+ "parity-wasm 0.42.2",
+ "wasmi-validation",
+]
+
+[[package]]
+name = "wasmi"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a3cb58f98e4d6c944af18c2c9002f22d0b928dfbb8b6c2b7d78a8573a5216bf"
+dependencies = [
+ "downcast-rs",
+ "libm",
+ "memory_units",
+ "num-rational 0.4.0",
  "num-traits",
  "parity-wasm 0.42.2",
  "wasmi-validation",
