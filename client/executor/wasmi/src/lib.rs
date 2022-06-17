@@ -182,10 +182,10 @@ impl Sandbox for FunctionExecutor {
 
 		let len = val_len as usize;
 
-		let buffer = match self.memory.get(val_ptr.into(), len) {
-			Err(_) => return Ok(sandbox_env::ERR_OUT_OF_BOUNDS),
-			Ok(buffer) => buffer,
-		};
+		let mut buffer = vec![0u8; len];
+		if let Err(_) = self.memory.get_into(val_ptr.into(), &mut buffer) {
+			return Ok(sandbox_env::ERR_OUT_OF_BOUNDS);
+		}
 
 		if sandboxed_memory.write_from(Pointer::new(offset as u32), &buffer).is_err() {
 			return Ok(sandbox_env::ERR_OUT_OF_BOUNDS)
@@ -595,7 +595,12 @@ fn call_in_wasm_module(
 	match result {
 		Ok(Some(I64(r))) => {
 			let (ptr, length) = unpack_ptr_and_len(r as u64);
-			memory.get(ptr, length as usize).map_err(|_| Error::Runtime)
+			let mut buffer = vec![0u8; length as usize];
+			if memory.get_into(ptr, &mut buffer).is_err() {
+				Err(Error::Runtime)
+			} else {
+				Ok(buffer)
+			}
 		},
 		Err(e) => {
 			trace!(
