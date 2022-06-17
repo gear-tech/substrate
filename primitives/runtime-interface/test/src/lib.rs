@@ -111,7 +111,7 @@ fn host_function_not_found() {
 }
 
 #[test]
-#[should_panic(expected = "Invalid utf8 data provided")]
+#[should_panic(expected = "called `Result::unwrap()` on an `Err` value: \"Failed to execute `test_invalid_utf8_data_should_return_an_error`: Execution aborted due to trap: host trap\"")]
 fn test_invalid_utf8_data_should_return_an_error() {
 	call_wasm_method::<HostFunctions>(
 		wasm_binary_unwrap(),
