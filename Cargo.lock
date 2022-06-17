@@ -11650,6 +11650,7 @@ dependencies = [
  "num-rational 0.4.0",
  "num-traits",
  "parity-wasm 0.42.2",
+ "region 3.0.0",
  "wasmi-validation",
 ]
 
