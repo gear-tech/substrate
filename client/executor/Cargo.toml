@@ -18,7 +18,7 @@ lazy_static = "1.4.0"
 lru = "0.8.1"
 parking_lot = "0.12.1"
 tracing = "0.1.29"
-wasmi = "0.13.2"
+wasmi = { version = "0.13", features = ["virtual_memory"] }
 
 codec = { package = "parity-scale-codec", version = "3.2.2" }
 sc-executor-common = { version = "0.10.0-dev", path = "common" }
