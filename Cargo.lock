@@ -8193,7 +8193,7 @@ dependencies = [
  "tempfile",
  "tracing",
  "tracing-subscriber",
- "wasmi 0.9.1",
+ "wasmi",
  "wat",
 ]
 
@@ -8214,7 +8214,7 @@ dependencies = [
  "wasmer",
  "wasmer-cache",
  "wasmer-compiler",
- "wasmi 0.11.0",
+ "wasmi",
 ]
 
 [[package]]
@@ -8228,7 +8228,7 @@ dependencies = [
  "sp-runtime-interface",
  "sp-sandbox",
  "sp-wasm-interface",
- "wasmi 0.11.0",
+ "wasmi",
 ]
 
 [[package]]
@@ -9671,7 +9671,7 @@ dependencies = [
  "substrate-bip39",
  "thiserror",
  "tiny-bip39",
- "wasmi 0.11.0",
+ "wasmi",
  "zeroize",
 ]
 
@@ -9996,7 +9996,7 @@ dependencies = [
  "sp-io",
  "sp-std",
  "sp-wasm-interface",
- "wasmi 0.11.0",
+ "wasmi",
  "wat",
 ]
 
@@ -10201,7 +10201,7 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "sp-std",
- "wasmi 0.11.0",
+ "wasmi",
  "wasmtime",
 ]
 
@@ -11624,22 +11624,6 @@ dependencies = [
 
 [[package]]
 name = "wasmi"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca00c5147c319a8ec91ec1a0edbec31e566ce2c9cc93b3f9bb86a9efd0eb795d"
-dependencies = [
- "downcast-rs",
- "errno",
- "libc",
- "memory_units",
- "num-rational 0.2.4",
- "num-traits",
- "parity-wasm 0.42.2",
- "wasmi-validation",
-]
-
-[[package]]
-name = "wasmi"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0a3cb58f98e4d6c944af18c2c9002f22d0b928dfbb8b6c2b7d78a8573a5216bf"
@@ -11650,6 +11634,7 @@ dependencies = [
  "num-rational 0.4.0",
  "num-traits",
  "parity-wasm 0.42.2",
+ "region 3.0.0",
  "wasmi-validation",
 ]
 
