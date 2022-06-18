@@ -18,7 +18,7 @@ codec = { package = "parity-scale-codec", version = "3.0.0" }
 environmental = "1.1.3"
 thiserror = "1.0.30"
 wasm-instrument = "0.1.0"
-wasmi = "0.11"
+wasmi = { version = "0.11", features = ["virtual_memory"] }
 sc-allocator = { version = "4.1.0-dev", path = "../../allocator" }
 sp-maybe-compressed-blob = { version = "4.1.0-dev", path = "../../../primitives/maybe-compressed-blob" }
 sp-sandbox = { version = "0.10.0-dev", path = "../../../primitives/sandbox" }
