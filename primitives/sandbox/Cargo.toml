@@ -35,6 +35,7 @@ std = [
 	"sp-std/std",
 	"sp-wasm-interface/std",
 	"wasmi/std",
+	"wasmi/virtual_memory",
 ]
 strict = []
 wasmer-sandbox = []
