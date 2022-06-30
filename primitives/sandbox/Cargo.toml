@@ -43,4 +43,4 @@ std = [
 	"wasmi",
 ]
 strict = []
-wasmer-sandbox = []
+host-sandbox = []
