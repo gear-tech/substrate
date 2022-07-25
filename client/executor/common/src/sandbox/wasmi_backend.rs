@@ -25,7 +25,7 @@ use sp_sandbox::HostError;
 use sp_wasm_interface::{FunctionContext, Pointer, ReturnValue, Value, WordSize};
 use wasmi::{
 	memory_units::Pages, ImportResolver, MemoryInstance, Module, ModuleInstance, RuntimeArgs,
-	RuntimeValue, Trap, TrapKind,
+	RuntimeValue, Trap,
 };
 
 use crate::{
@@ -41,7 +41,7 @@ environmental::environmental!(SandboxContextStore: trait SandboxContext);
 
 /// Construct trap error from specified message
 fn trap(msg: &'static str) -> Trap {
-	TrapKind::Host(Box::new(Error::Other(msg.into()))).into()
+	Trap::Host(Box::new(Error::Other(msg.into()))).into()
 }
 
 impl ImportResolver for Imports {
