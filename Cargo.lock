@@ -11533,9 +11533,9 @@ dependencies = [
 
 [[package]]
 name = "wasmi"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51889a3e05a91b42c0d5ca524926da270860a93646936dfdf037abd6bba9f266"
+checksum = "fc13b3c219ca9aafeec59150d80d89851df02e0061bc357b4d66fc55a8d38787"
 dependencies = [
  "parity-wasm 0.45.0",
  "wasmi-validation",
@@ -11544,9 +11544,9 @@ dependencies = [
 
 [[package]]
 name = "wasmi-validation"
-version = "0.4.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74338a2db3cb673cc76bb3fbf72842adac9da84e4ac4efa516cd431fee01b63b"
+checksum = "91ff416ad1ff0c42e5a926ed5d5fab74c0f098749aa0ad8b2a34b982ce0e867b"
 dependencies = [
  "parity-wasm 0.45.0",
 ]
