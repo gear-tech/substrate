@@ -127,13 +127,14 @@ std = [
 # or Intel SGX.
 # For the regular wasm runtime builds this should not be used.
 full_crypto = [
-	"ed25519-dalek",
-	"blake2-rfc",
-	"schnorrkel",
+	"ecdsa",
+	"ed25519",
+	"sr25519",
 	"hex",
-	"libsecp256k1",
-	"secp256k1",
-	"sp-core-hashing",
 	"sp-runtime-interface/disable_target_static_assertions",
 	"merlin",
 ]
+ecdsa = ["base_crypto", "libsecp256k1", "secp256k1", "sp-core-hashing"]
+ed25519 = ["base_crypto", "ed25519-dalek", "sp-core-hashing"]
+sr25519 = ["base_crypto", "schnorrkel"]
+base_crypto = ["blake2-rfc"]
