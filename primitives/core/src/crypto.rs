@@ -21,7 +21,10 @@
 
 #[cfg(feature = "std")]
 use crate::hexdisplay::HexDisplay;
-use crate::{ed25519, sr25519};
+#[cfg(feature = "ed25519")]
+use crate::ed25519;
+#[cfg(feature = "sr25519")]
+use crate::sr25519;
 #[cfg(feature = "std")]
 use base58::{FromBase58, ToBase58};
 use codec::{Decode, Encode, MaxEncodedLen};
@@ -58,7 +61,7 @@ pub enum Infallible {}
 
 /// The length of the junction identifier. Note that this is also referred to as the
 /// `CHAIN_CODE_LENGTH` in the context of Schnorrkel.
-#[cfg(feature = "full_crypto")]
+#[cfg(feature = "base_crypto")]
 pub const JUNCTION_ID_LEN: usize = 32;
 
 /// Similar to `From`, except that the onus is on the part of the caller to ensure
@@ -85,7 +88,7 @@ impl<S, T: UncheckedFrom<S>> UncheckedInto<T> for S {
 
 /// An error with the interpretation of a secret.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg(feature = "full_crypto")]
+#[cfg(feature = "base_crypto")]
 pub enum SecretStringError {
 	/// The overall format was invalid (e.g. the seed phrase contained symbols).
 	InvalidFormat,
@@ -105,7 +108,7 @@ pub enum SecretStringError {
 /// a new secret key from an existing secret key and, in the case of `SoftRaw` and `SoftIndex`
 /// a new public key from an existing public key.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Encode, Decode)]
-#[cfg(feature = "full_crypto")]
+#[cfg(feature = "base_crypto")]
 pub enum DeriveJunction {
 	/// Soft (vanilla) derivation. Public keys have a correspondent derivation.
 	Soft([u8; JUNCTION_ID_LEN]),
@@ -113,7 +116,7 @@ pub enum DeriveJunction {
 	Hard([u8; JUNCTION_ID_LEN]),
 }
 
-#[cfg(feature = "full_crypto")]
+#[cfg(feature = "base_crypto")]
 impl DeriveJunction {
 	/// Consume self to return a soft derive junction with the same chain code.
 	pub fn soften(self) -> Self {
@@ -174,7 +177,7 @@ impl DeriveJunction {
 	}
 }
 
-#[cfg(feature = "full_crypto")]
+#[cfg(feature = "base_crypto")]
 impl<T: AsRef<str>> From<T> for DeriveJunction {
 	fn from(j: T) -> DeriveJunction {
 		let j = j.as_ref();
@@ -554,12 +557,14 @@ impl From<AccountId32> for [u8; 32] {
 	}
 }
 
+#[cfg(feature = "sr25519")]
 impl From<sr25519::Public> for AccountId32 {
 	fn from(k: sr25519::Public) -> Self {
 		k.0.into()
 	}
 }
 
+#[cfg(feature = "ed25519")]
 impl From<ed25519::Public> for AccountId32 {
 	fn from(k: ed25519::Public) -> Self {
 		k.0.into()
@@ -828,7 +833,7 @@ impl sp_std::str::FromStr for SecretUri {
 /// Trait suitable for typical cryptographic PKI key pair type.
 ///
 /// For now it just specifies how to create a key from a phrase and derivation path.
-#[cfg(feature = "full_crypto")]
+#[cfg(feature = "base_crypto")]
 pub trait Pair: CryptoType + Sized + Clone + Send + Sync + 'static {
 	/// The type which is used to encode a public key.
 	type Public: Public + Hash;
@@ -1019,7 +1024,7 @@ where
 /// Type which has a particular kind of crypto associated with it.
 pub trait CryptoType {
 	/// The pair key type of this crypto.
-	#[cfg(feature = "full_crypto")]
+	#[cfg(feature = "base_crypto")]
 	type Pair: Pair;
 }
 
