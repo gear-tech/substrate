@@ -19,6 +19,7 @@
 //! Simple Ed25519 API.
 // end::description[]
 
+#[cfg(feature = "ed25519")]
 use sp_std::vec::Vec;
 
 use crate::{
@@ -33,9 +34,11 @@ use crate::crypto::Ss58Codec;
 use crate::crypto::{
 	CryptoType, CryptoTypeId, CryptoTypePublicPair, Derive, Public as TraitPublic, UncheckedFrom,
 };
+#[cfg(feature = "ed25519")]
 use crate::crypto::{DeriveJunction, Pair as TraitPair, SecretStringError};
 #[cfg(feature = "std")]
 use bip39::{Language, Mnemonic, MnemonicType};
+#[cfg(feature = "ed25519")]
 use ed25519_dalek::{Signer as _, Verifier as _};
 #[cfg(feature = "std")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -50,9 +53,11 @@ pub const CRYPTO_ID: CryptoTypeId = CryptoTypeId(*b"ed25");
 /// A secret seed. It's not called a "secret key" because ring doesn't expose the secret keys
 /// of the key pair (yeah, dumb); as such we're forced to remember the seed manually if we
 /// will need it later (such as for HDKD).
+#[cfg(feature = "ed25519")]
 type Seed = [u8; 32];
 
 /// A public key.
+#[cfg_attr(feature = "ed25519", derive(Hash))]
 #[derive(
 	PartialEq,
 	Eq,
@@ -65,13 +70,14 @@ type Seed = [u8; 32];
 	PassByInner,
 	MaxEncodedLen,
 	TypeInfo,
-	Hash,
 )]
 pub struct Public(pub [u8; 32]);
 
 /// A key pair.
+#[cfg(feature = "ed25519")]
 pub struct Pair(ed25519_dalek::Keypair);
 
+#[cfg(feature = "ed25519")]
 impl Clone for Pair {
 	fn clone(&self) -> Self {
 		Pair(ed25519_dalek::Keypair {
@@ -127,6 +133,7 @@ impl From<Public> for [u8; 32] {
 	}
 }
 
+#[cfg(feature = "ed25519")]
 impl From<Pair> for Public {
 	fn from(x: Pair) -> Self {
 		x.public()
@@ -202,7 +209,8 @@ impl<'de> Deserialize<'de> for Public {
 }
 
 /// A signature (a 512-bit value).
-#[derive(Encode, Decode, MaxEncodedLen, PassByInner, TypeInfo, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ed25519", derive(Hash))]
+#[derive(Encode, Decode, MaxEncodedLen, PassByInner, TypeInfo, PartialEq, Eq)]
 pub struct Signature(pub [u8; 64]);
 
 impl TryFrom<&[u8]> for Signature {
@@ -387,16 +395,19 @@ impl From<&Public> for CryptoTypePublicPair {
 }
 
 /// Derive a single hard junction.
+#[cfg(feature = "ed25519")]
 fn derive_hard_junction(secret_seed: &Seed, cc: &[u8; 32]) -> Seed {
 	("Ed25519HDKD", secret_seed, cc).using_encoded(sp_core_hashing::blake2_256)
 }
 
 /// An error when deriving a key.
+#[cfg(feature = "ed25519")]
 pub enum DeriveError {
 	/// A soft key was found in the path (and is unsupported).
 	SoftKeyInPath,
 }
 
+#[cfg(feature = "ed25519")]
 impl TraitPair for Pair {
 	type Public = Public;
 	type Seed = Seed;
@@ -510,6 +521,7 @@ impl TraitPair for Pair {
 	}
 }
 
+#[cfg(feature = "ed25519")]
 impl Pair {
 	/// Get the seed for this key.
 	pub fn seed(&self) -> &Seed {
@@ -530,13 +542,16 @@ impl Pair {
 }
 
 impl CryptoType for Public {
+	#[cfg(feature = "ed25519")]
 	type Pair = Pair;
 }
 
 impl CryptoType for Signature {
+	#[cfg(feature = "ed25519")]
 	type Pair = Pair;
 }
 
+#[cfg(feature = "ed25519")]
 impl CryptoType for Pair {
 	type Pair = Pair;
 }

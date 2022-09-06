@@ -27,20 +27,24 @@ use crate::crypto::{
 	ByteArray, CryptoType, CryptoTypeId, CryptoTypePublicPair, Derive, Public as TraitPublic,
 	UncheckedFrom,
 };
+#[cfg(feature = "ecdsa")]
 use crate::crypto::{DeriveJunction, Pair as TraitPair, SecretStringError};
+#[cfg(feature = "ecdsa")]
 use sp_core_hashing::blake2_256;
 #[cfg(feature = "std")]
 use bip39::{Language, Mnemonic, MnemonicType};
-#[cfg(not(feature = "std"))]
+#[cfg(all(feature = "ecdsa", not(feature = "std")))]
 use secp256k1::Secp256k1;
 #[cfg(feature = "std")]
 use secp256k1::SECP256K1;
+#[cfg(feature = "ecdsa")]
 use secp256k1::{
 	ecdsa::{RecoverableSignature, RecoveryId},
 	Message, PublicKey, SecretKey,
 };
 #[cfg(feature = "std")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+#[cfg(feature = "ecdsa")]
 use sp_std::vec::Vec;
 
 /// An identifier used to match public keys against ecdsa keys
@@ -49,9 +53,11 @@ pub const CRYPTO_ID: CryptoTypeId = CryptoTypeId(*b"ecds");
 /// A secret seed (which is bytewise essentially equivalent to a SecretKey).
 ///
 /// We need it as a different type because `Seed` is expected to be AsRef<[u8]>.
+#[cfg(feature = "ecdsa")]
 type Seed = [u8; 32];
 
 /// The ECDSA compressed public key.
+#[cfg_attr(feature = "ecdsa", derive(Hash))]
 #[derive(
 	Clone,
 	Copy,
@@ -64,7 +70,6 @@ type Seed = [u8; 32];
 	PartialEq,
 	PartialOrd,
 	Ord,
-	Hash,
 )]
 pub struct Public(pub [u8; 33]);
 
@@ -144,6 +149,7 @@ impl TryFrom<&[u8]> for Public {
 	}
 }
 
+#[cfg(feature = "ecdsa")]
 impl From<Pair> for Public {
 	fn from(x: Pair) -> Self {
 		x.public()
@@ -198,7 +204,8 @@ impl<'de> Deserialize<'de> for Public {
 }
 
 /// A signature (a 512-bit value, plus 8 bits for recovery ID).
-#[derive(Encode, Decode, MaxEncodedLen, PassByInner, TypeInfo, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ecdsa", derive(Hash))]
+#[derive(Encode, Decode, MaxEncodedLen, PassByInner, TypeInfo, PartialEq, Eq)]
 pub struct Signature(pub [u8; 65]);
 
 impl TryFrom<&[u8]> for Signature {
@@ -317,11 +324,13 @@ impl Signature {
 	}
 
 	/// Recover the public key from this signature and a message.
+	#[cfg(feature = "ecdsa")]
 	pub fn recover<M: AsRef<[u8]>>(&self, message: M) -> Option<Public> {
 		self.recover_prehashed(&blake2_256(message.as_ref()))
 	}
 
 	/// Recover the public key from this signature and a pre-hashed message.
+	#[cfg(feature = "ecdsa")]
 	pub fn recover_prehashed(&self, message: &[u8; 32]) -> Option<Public> {
 		let rid = RecoveryId::from_i32(self.0[64] as i32).ok()?;
 		let sig = RecoverableSignature::from_compact(&self.0[..64], rid).ok()?;
@@ -339,6 +348,7 @@ impl Signature {
 	}
 }
 
+#[cfg(feature = "ecdsa")]
 impl From<RecoverableSignature> for Signature {
 	fn from(recsig: RecoverableSignature) -> Signature {
 		let mut r = Self::default();
@@ -351,23 +361,27 @@ impl From<RecoverableSignature> for Signature {
 }
 
 /// Derive a single hard junction.
+#[cfg(feature = "ecdsa")]
 fn derive_hard_junction(secret_seed: &Seed, cc: &[u8; 32]) -> Seed {
 	("Secp256k1HDKD", secret_seed, cc).using_encoded(blake2_256)
 }
 
 /// An error when deriving a key.
+#[cfg(feature = "ecdsa")]
 pub enum DeriveError {
 	/// A soft key was found in the path (and is unsupported).
 	SoftKeyInPath,
 }
 
 /// A key pair.
+#[cfg(feature = "ecdsa")]
 #[derive(Clone)]
 pub struct Pair {
 	public: Public,
 	secret: SecretKey,
 }
 
+#[cfg(feature = "ecdsa")]
 impl TraitPair for Pair {
 	type Public = Public;
 	type Seed = Seed;
@@ -480,6 +494,7 @@ impl TraitPair for Pair {
 	}
 }
 
+#[cfg(feature = "ecdsa")]
 impl Pair {
 	/// Get the seed for this key.
 	pub fn seed(&self) -> Seed {
@@ -547,6 +562,7 @@ impl Pair {
 // NOTE: this solution is not effective when `Pair` is moved around memory.
 // The very same problem affects other cryptographic backends that are just using
 // `zeroize`for their secrets.
+#[cfg(feature = "ecdsa")]
 impl Drop for Pair {
 	fn drop(&mut self) {
 		let ptr = self.secret.as_mut_ptr();
@@ -559,13 +575,16 @@ impl Drop for Pair {
 }
 
 impl CryptoType for Public {
+	#[cfg(feature = "ecdsa")]
 	type Pair = Pair;
 }
 
 impl CryptoType for Signature {
+	#[cfg(feature = "ecdsa")]
 	type Pair = Pair;
 }
 
+#[cfg(feature = "ecdsa")]
 impl CryptoType for Pair {
 	type Pair = Pair;
 }
