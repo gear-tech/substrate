@@ -128,7 +128,7 @@ impl<'a, T> Externals for GuestExternals<'a, T> {
 				ReturnValue::Value(v) => Some(to_wasmi(v)),
 				ReturnValue::Unit => None,
 			}),
-			Err(HostError) => Err(Trap::Host(Box::new(DummyHostError)).into()),
+			Err(HostError) => Err(Trap::host(DummyHostError)),
 		}
 	}
 }

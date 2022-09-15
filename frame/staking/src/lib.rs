@@ -309,8 +309,8 @@ use frame_support::{
 use scale_info::TypeInfo;
 use sp_runtime::{
 	curve::PiecewiseLinear,
-	traits::{AtLeast32BitUnsigned, Convert, Saturating, Zero},
-	Perbill, Perquintill, RuntimeDebug,
+	traits::{AtLeast32BitUnsigned, Convert, Saturating, StaticLookup, Zero},
+	Perbill, Perquintill, Rounding, RuntimeDebug,
 };
 use sp_staking::{
 	offence::{Offence, OffenceError, ReportOffence},
@@ -346,6 +346,8 @@ type PositiveImbalanceOf<T> = <<T as Config>::Currency as Currency<
 type NegativeImbalanceOf<T> = <<T as Config>::Currency as Currency<
 	<T as frame_system::Config>::AccountId,
 >>::NegativeImbalance;
+
+type AccountIdLookupOf<T> = <<T as frame_system::Config>::Lookup as StaticLookup>::Source;
 
 parameter_types! {
 	pub MaxUnlockingChunks: u32 = 32;
@@ -562,6 +564,7 @@ impl<T: Config> StakingLedger<T> {
 			return Zero::zero()
 		}
 
+		use sp_runtime::PerThing as _;
 		use sp_staking::OnStakerSlash as _;
 		let mut remaining_slash = slash_amount;
 		let pre_slash_total = self.total;
@@ -592,7 +595,12 @@ impl<T: Config> StakingLedger<T> {
 						}
 					});
 				let affected_balance = self.active.saturating_add(unbonding_affected_balance);
-				let ratio = Perquintill::from_rational(slash_amount, affected_balance);
+				let ratio = Perquintill::from_rational_with_rounding(
+					slash_amount,
+					affected_balance,
+					Rounding::Up,
+				)
+				.unwrap_or_else(|_| Perquintill::one());
 				(
 					Some(ratio),
 					affected_indices.chain((0..first_slashable_index).rev()).collect::<Vec<_>>(),
@@ -616,7 +624,7 @@ impl<T: Config> StakingLedger<T> {
 
 		let mut slash_out_of = |target: &mut BalanceOf<T>, slash_remaining: &mut BalanceOf<T>| {
 			let mut slash_from_target = if let Some(ratio) = maybe_proportional {
-				ratio * (*target)
+				ratio.mul_ceil(*target)
 			} else {
 				*slash_remaining
 			}
@@ -872,16 +880,17 @@ enum Releases {
 	V2_0_0,
 	V3_0_0,
 	V4_0_0,
-	V5_0_0, // blockable validators.
-	V6_0_0, // removal of all storage associated with offchain phragmen.
-	V7_0_0, // keep track of number of nominators / validators in map
-	V8_0_0, // populate `VoterList`.
-	V9_0_0, // inject validators into `VoterList` as well.
+	V5_0_0,  // blockable validators.
+	V6_0_0,  // removal of all storage associated with offchain phragmen.
+	V7_0_0,  // keep track of number of nominators / validators in map
+	V8_0_0,  // populate `VoterList`.
+	V9_0_0,  // inject validators into `VoterList` as well.
+	V10_0_0, // remove `EarliestUnappliedSlash`.
 }
 
 impl Default for Releases {
 	fn default() -> Self {
-		Releases::V8_0_0
+		Releases::V10_0_0
 	}
 }
 

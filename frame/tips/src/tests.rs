@@ -19,8 +19,6 @@
 
 #![cfg(test)]
 
-use std::cell::RefCell;
-
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
@@ -70,13 +68,13 @@ impl frame_system::Config for Test {
 	type Origin = Origin;
 	type Index = u64;
 	type BlockNumber = u64;
-	type Call = Call;
+	type RuntimeCall = RuntimeCall;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
 	type AccountId = u128; // u64 is not enough to hold bytes used to generate bounty account
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = ConstU64<250>;
 	type Version = ();
 	type PalletInfo = PalletInfo;
@@ -94,24 +92,23 @@ impl pallet_balances::Config for Test {
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
 	type Balance = u64;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type DustRemoval = ();
 	type ExistentialDeposit = ConstU64<1>;
 	type AccountStore = System;
 	type WeightInfo = ();
 }
-thread_local! {
-	static TEN_TO_FOURTEEN: RefCell<Vec<u128>> = RefCell::new(vec![10,11,12,13,14]);
+parameter_types! {
+	static TenToFourteenTestValue: Vec<u128> = vec![10,11,12,13,14];
 }
 pub struct TenToFourteen;
 impl SortedMembers<u128> for TenToFourteen {
 	fn sorted_members() -> Vec<u128> {
-		TEN_TO_FOURTEEN.with(|v| v.borrow().clone())
+		TenToFourteenTestValue::get().clone()
 	}
 	#[cfg(feature = "runtime-benchmarks")]
 	fn add(new: &u128) {
-		TEN_TO_FOURTEEN.with(|v| {
-			let mut members = v.borrow_mut();
+		TenToFourteenTestValue::mutate(|members| {
 			members.push(*new);
 			members.sort();
 		})
@@ -119,7 +116,7 @@ impl SortedMembers<u128> for TenToFourteen {
 }
 impl ContainsLengthBound for TenToFourteen {
 	fn max_len() -> usize {
-		TEN_TO_FOURTEEN.with(|v| v.borrow().len())
+		TenToFourteenTestValue::get().len()
 	}
 	fn min_len() -> usize {
 		0
@@ -136,7 +133,7 @@ impl pallet_treasury::Config for Test {
 	type Currency = pallet_balances::Pallet<Test>;
 	type ApproveOrigin = frame_system::EnsureRoot<u128>;
 	type RejectOrigin = frame_system::EnsureRoot<u128>;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type OnSlash = ();
 	type ProposalBond = ProposalBond;
 	type ProposalBondMinimum = ConstU64<1>;
@@ -155,7 +152,7 @@ impl pallet_treasury::Config<Instance1> for Test {
 	type Currency = pallet_balances::Pallet<Test>;
 	type ApproveOrigin = frame_system::EnsureRoot<u128>;
 	type RejectOrigin = frame_system::EnsureRoot<u128>;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type OnSlash = ();
 	type ProposalBond = ProposalBond;
 	type ProposalBondMinimum = ConstU64<1>;
@@ -179,7 +176,7 @@ impl Config for Test {
 	type TipFindersFee = TipFindersFee;
 	type TipReportDepositBase = ConstU64<1>;
 	type DataDepositPerByte = ConstU64<1>;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type WeightInfo = ();
 }
 
@@ -190,7 +187,7 @@ impl Config<Instance1> for Test {
 	type TipFindersFee = TipFindersFee;
 	type TipReportDepositBase = ConstU64<1>;
 	type DataDepositPerByte = ConstU64<1>;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type WeightInfo = ();
 }
 
@@ -212,7 +209,7 @@ fn last_event() -> TipEvent<Test> {
 	System::events()
 		.into_iter()
 		.map(|r| r.event)
-		.filter_map(|e| if let Event::Tips(inner) = e { Some(inner) } else { None })
+		.filter_map(|e| if let RuntimeEvent::Tips(inner) = e { Some(inner) } else { None })
 		.last()
 		.unwrap()
 }
@@ -256,10 +253,10 @@ fn report_awesome_and_tip_works() {
 		);
 
 		let h = tip_hash();
-		assert_ok!(Tips::tip(Origin::signed(10), h.clone(), 10));
-		assert_ok!(Tips::tip(Origin::signed(11), h.clone(), 10));
-		assert_ok!(Tips::tip(Origin::signed(12), h.clone(), 10));
-		assert_noop!(Tips::tip(Origin::signed(9), h.clone(), 10), BadOrigin);
+		assert_ok!(Tips::tip(Origin::signed(10), h, 10));
+		assert_ok!(Tips::tip(Origin::signed(11), h, 10));
+		assert_ok!(Tips::tip(Origin::signed(12), h, 10));
+		assert_noop!(Tips::tip(Origin::signed(9), h, 10), BadOrigin);
 		System::set_block_number(2);
 		assert_ok!(Tips::close_tip(Origin::signed(100), h.into()));
 		assert_eq!(Balances::reserved_balance(0), 0);
@@ -276,9 +273,9 @@ fn report_awesome_from_beneficiary_and_tip_works() {
 		assert_eq!(Balances::reserved_balance(0), 12);
 		assert_eq!(Balances::free_balance(0), 88);
 		let h = BlakeTwo256::hash_of(&(BlakeTwo256::hash(b"awesome.dot"), 0u128));
-		assert_ok!(Tips::tip(Origin::signed(10), h.clone(), 10));
-		assert_ok!(Tips::tip(Origin::signed(11), h.clone(), 10));
-		assert_ok!(Tips::tip(Origin::signed(12), h.clone(), 10));
+		assert_ok!(Tips::tip(Origin::signed(10), h, 10));
+		assert_ok!(Tips::tip(Origin::signed(11), h, 10));
+		assert_ok!(Tips::tip(Origin::signed(12), h, 10));
 		System::set_block_number(2);
 		assert_ok!(Tips::close_tip(Origin::signed(100), h.into()));
 		assert_eq!(Balances::reserved_balance(0), 0);
@@ -300,11 +297,11 @@ fn close_tip_works() {
 
 		assert_eq!(last_event(), TipEvent::NewTip { tip_hash: h });
 
-		assert_ok!(Tips::tip(Origin::signed(11), h.clone(), 10));
+		assert_ok!(Tips::tip(Origin::signed(11), h, 10));
 
 		assert_noop!(Tips::close_tip(Origin::signed(0), h.into()), Error::<Test>::StillOpen);
 
-		assert_ok!(Tips::tip(Origin::signed(12), h.clone(), 10));
+		assert_ok!(Tips::tip(Origin::signed(12), h, 10));
 
 		assert_eq!(last_event(), TipEvent::TipClosing { tip_hash: h });
 
@@ -340,10 +337,10 @@ fn slash_tip_works() {
 		assert_eq!(last_event(), TipEvent::NewTip { tip_hash: h });
 
 		// can't remove from any origin
-		assert_noop!(Tips::slash_tip(Origin::signed(0), h.clone()), BadOrigin);
+		assert_noop!(Tips::slash_tip(Origin::signed(0), h), BadOrigin);
 
 		// can remove from root.
-		assert_ok!(Tips::slash_tip(Origin::root(), h.clone()));
+		assert_ok!(Tips::slash_tip(Origin::root(), h));
 		assert_eq!(last_event(), TipEvent::TipSlashed { tip_hash: h, finder: 0, deposit: 12 });
 
 		// tipper slashed
@@ -359,11 +356,11 @@ fn retract_tip_works() {
 		Balances::make_free_balance_be(&Treasury::account_id(), 101);
 		assert_ok!(Tips::report_awesome(Origin::signed(0), b"awesome.dot".to_vec(), 3));
 		let h = tip_hash();
-		assert_ok!(Tips::tip(Origin::signed(10), h.clone(), 10));
-		assert_ok!(Tips::tip(Origin::signed(11), h.clone(), 10));
-		assert_ok!(Tips::tip(Origin::signed(12), h.clone(), 10));
-		assert_noop!(Tips::retract_tip(Origin::signed(10), h.clone()), Error::<Test>::NotFinder);
-		assert_ok!(Tips::retract_tip(Origin::signed(0), h.clone()));
+		assert_ok!(Tips::tip(Origin::signed(10), h, 10));
+		assert_ok!(Tips::tip(Origin::signed(11), h, 10));
+		assert_ok!(Tips::tip(Origin::signed(12), h, 10));
+		assert_noop!(Tips::retract_tip(Origin::signed(10), h), Error::<Test>::NotFinder);
+		assert_ok!(Tips::retract_tip(Origin::signed(0), h));
 		System::set_block_number(2);
 		assert_noop!(Tips::close_tip(Origin::signed(0), h.into()), Error::<Test>::UnknownTip);
 
@@ -371,10 +368,10 @@ fn retract_tip_works() {
 		Balances::make_free_balance_be(&Treasury::account_id(), 101);
 		assert_ok!(Tips::tip_new(Origin::signed(10), b"awesome.dot".to_vec(), 3, 10));
 		let h = tip_hash();
-		assert_ok!(Tips::tip(Origin::signed(11), h.clone(), 10));
-		assert_ok!(Tips::tip(Origin::signed(12), h.clone(), 10));
-		assert_noop!(Tips::retract_tip(Origin::signed(0), h.clone()), Error::<Test>::NotFinder);
-		assert_ok!(Tips::retract_tip(Origin::signed(10), h.clone()));
+		assert_ok!(Tips::tip(Origin::signed(11), h, 10));
+		assert_ok!(Tips::tip(Origin::signed(12), h, 10));
+		assert_noop!(Tips::retract_tip(Origin::signed(0), h), Error::<Test>::NotFinder);
+		assert_ok!(Tips::retract_tip(Origin::signed(10), h));
 		System::set_block_number(2);
 		assert_noop!(Tips::close_tip(Origin::signed(10), h.into()), Error::<Test>::UnknownTip);
 	});
@@ -386,8 +383,8 @@ fn tip_median_calculation_works() {
 		Balances::make_free_balance_be(&Treasury::account_id(), 101);
 		assert_ok!(Tips::tip_new(Origin::signed(10), b"awesome.dot".to_vec(), 3, 0));
 		let h = tip_hash();
-		assert_ok!(Tips::tip(Origin::signed(11), h.clone(), 10));
-		assert_ok!(Tips::tip(Origin::signed(12), h.clone(), 1000000));
+		assert_ok!(Tips::tip(Origin::signed(11), h, 10));
+		assert_ok!(Tips::tip(Origin::signed(12), h, 1000000));
 		System::set_block_number(2);
 		assert_ok!(Tips::close_tip(Origin::signed(0), h.into()));
 		assert_eq!(Balances::free_balance(3), 10);
@@ -400,13 +397,13 @@ fn tip_changing_works() {
 		Balances::make_free_balance_be(&Treasury::account_id(), 101);
 		assert_ok!(Tips::tip_new(Origin::signed(10), b"awesome.dot".to_vec(), 3, 10000));
 		let h = tip_hash();
-		assert_ok!(Tips::tip(Origin::signed(11), h.clone(), 10000));
-		assert_ok!(Tips::tip(Origin::signed(12), h.clone(), 10000));
-		assert_ok!(Tips::tip(Origin::signed(13), h.clone(), 0));
-		assert_ok!(Tips::tip(Origin::signed(14), h.clone(), 0));
-		assert_ok!(Tips::tip(Origin::signed(12), h.clone(), 1000));
-		assert_ok!(Tips::tip(Origin::signed(11), h.clone(), 100));
-		assert_ok!(Tips::tip(Origin::signed(10), h.clone(), 10));
+		assert_ok!(Tips::tip(Origin::signed(11), h, 10000));
+		assert_ok!(Tips::tip(Origin::signed(12), h, 10000));
+		assert_ok!(Tips::tip(Origin::signed(13), h, 0));
+		assert_ok!(Tips::tip(Origin::signed(14), h, 0));
+		assert_ok!(Tips::tip(Origin::signed(12), h, 1000));
+		assert_ok!(Tips::tip(Origin::signed(11), h, 100));
+		assert_ok!(Tips::tip(Origin::signed(10), h, 10));
 		System::set_block_number(2);
 		assert_ok!(Tips::close_tip(Origin::signed(0), h.into()));
 		assert_eq!(Balances::free_balance(3), 10);
@@ -595,10 +592,10 @@ fn report_awesome_and_tip_works_second_instance() {
 		assert_ok!(Tips::report_awesome(Origin::signed(0), b"awesome.dot".to_vec(), 3));
 
 		let h = tip_hash();
-		assert_ok!(Tips1::tip(Origin::signed(10), h.clone(), 10));
-		assert_ok!(Tips1::tip(Origin::signed(11), h.clone(), 10));
-		assert_ok!(Tips1::tip(Origin::signed(12), h.clone(), 10));
-		assert_noop!(Tips1::tip(Origin::signed(9), h.clone(), 10), BadOrigin);
+		assert_ok!(Tips1::tip(Origin::signed(10), h, 10));
+		assert_ok!(Tips1::tip(Origin::signed(11), h, 10));
+		assert_ok!(Tips1::tip(Origin::signed(12), h, 10));
+		assert_noop!(Tips1::tip(Origin::signed(9), h, 10), BadOrigin);
 
 		System::set_block_number(2);
 
