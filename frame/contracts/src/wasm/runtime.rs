@@ -30,7 +30,7 @@ use codec::{Decode, DecodeLimit, Encode, MaxEncodedLen};
 use frame_support::{dispatch::DispatchError, ensure, traits::Get, weights::Weight};
 use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
 use pallet_contracts_proc_macro::define_env;
-use sp_core::{crypto::UncheckedFrom, Bytes};
+use sp_core::crypto::UncheckedFrom;
 use sp_io::hashing::{blake2_128, blake2_256, keccak_256, sha2_256};
 use sp_runtime::traits::{Bounded, Zero};
 use sp_sandbox::SandboxMemory;
@@ -296,9 +296,8 @@ impl RuntimeCosts {
 			ContainsStorage(len) => s
 				.contains_storage
 				.saturating_add(s.contains_storage_per_byte.saturating_mul(len.into())),
-			GetStorage(len) => {
-				s.get_storage.saturating_add(s.get_storage_per_byte.saturating_mul(len.into()))
-			},
+			GetStorage(len) =>
+				s.get_storage.saturating_add(s.get_storage_per_byte.saturating_mul(len.into())),
 			#[cfg(feature = "unstable-interface")]
 			TakeStorage(len) => s
 				.take_storage
@@ -484,19 +483,18 @@ where
 				TrapReason::Return(ReturnData { flags, data }) => {
 					let flags =
 						ReturnFlags::from_bits(flags).ok_or(Error::<E::T>::InvalidCallFlags)?;
-					Ok(ExecReturnValue { flags, data: Bytes(data) })
+					Ok(ExecReturnValue { flags, data })
 				},
-				TrapReason::Termination => {
-					Ok(ExecReturnValue { flags: ReturnFlags::empty(), data: Bytes(Vec::new()) })
-				},
+				TrapReason::Termination =>
+					Ok(ExecReturnValue { flags: ReturnFlags::empty(), data: Vec::new() }),
 				TrapReason::SupervisorError(error) => return Err(error.into()),
-			};
+			}
 		}
 
 		// Check the exact type of the error.
 		match sandbox_result {
 			// No traps were generated. Proceed normally.
-			Ok(_) => Ok(ExecReturnValue { flags: ReturnFlags::empty(), data: Bytes(Vec::new()) }),
+			Ok(_) => Ok(ExecReturnValue { flags: ReturnFlags::empty(), data: Vec::new() }),
 			// `Error::Module` is returned only if instantiation or linking failed (i.e.
 			// wasm binary tried to import a function that is not provided by the host).
 			// This shouldn't happen because validation process ought to reject such binaries.
@@ -507,7 +505,8 @@ where
 			// Any other kind of a trap should result in a failure.
 			Err(sp_sandbox::Error::Execution)
 			| Err(sp_sandbox::Error::OutOfBounds)
-			| Err(sp_sandbox::Error::MemoryGrow) => return Err(Error::<E::T>::ContractTrapped.into()),
+			| Err(sp_sandbox::Error::MemoryGrow) =>
+				return Err(Error::<E::T>::ContractTrapped.into()),
 		}
 	}
 
@@ -637,14 +636,14 @@ where
 		create_token: impl FnOnce(u32) -> Option<RuntimeCosts>,
 	) -> Result<(), DispatchError> {
 		if allow_skip && out_ptr == SENTINEL {
-			return Ok(());
+			return Ok(())
 		}
 
 		let buf_len = buf.len() as u32;
 		let len: u32 = self.read_sandbox_memory_as(out_len_ptr)?;
 
 		if len < buf_len {
-			return Err(Error::<E::T>::OutputBufferTooSmall.into());
+			return Err(Error::<E::T>::OutputBufferTooSmall.into())
 		}
 
 		if let Some(costs) = create_token(buf_len) {
@@ -742,7 +741,7 @@ where
 		let charged = self
 			.charge_gas(RuntimeCosts::SetStorage { new_bytes: value_len, old_bytes: max_size })?;
 		if value_len > max_size {
-			return Err(Error::<E::T>::ValueTooLarge.into());
+			return Err(Error::<E::T>::ValueTooLarge.into())
 		}
 		let key = self.read_sandbox_memory(key_ptr, key_type.len::<E::T>()?)?;
 		let value = Some(self.read_sandbox_memory(value_ptr, value_len)?);
@@ -869,7 +868,7 @@ where
 			},
 			CallType::DelegateCall { code_hash_ptr } => {
 				if flags.contains(CallFlags::ALLOW_REENTRY) {
-					return Err(Error::<E::T>::InvalidCallFlags.into());
+					return Err(Error::<E::T>::InvalidCallFlags.into())
 				}
 				let code_hash = self.read_sandbox_memory_as(code_hash_ptr)?;
 				self.ext.delegate_call(code_hash, input_data)
@@ -882,8 +881,8 @@ where
 			if let Ok(return_value) = call_outcome {
 				return Err(TrapReason::Return(ReturnData {
 					flags: return_value.flags.bits(),
-					data: return_value.data.0,
-				}));
+					data: return_value.data,
+				}))
 			}
 		}
 
@@ -1979,11 +1978,7 @@ pub mod env {
 		data_len: u32,
 	) -> Result<(), TrapReason> {
 		fn has_duplicates<T: Ord>(items: &mut Vec<T>) -> bool {
-			// # Warning
-			//
-			// Unstable sorts are non-deterministic across architectures. The usage here is OK
-			// because we are rejecting duplicates which removes the non determinism.
-			items.sort_unstable();
+			items.sort();
 			// Find any two consecutive equal elements.
 			items.windows(2).any(|w| match &w {
 				&[a, b] => a == b,
