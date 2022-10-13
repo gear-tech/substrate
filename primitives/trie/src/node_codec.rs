@@ -325,3 +325,20 @@ impl Bitmap {
 		dest[1] = (bitmap / 256) as u8;
 	}
 }
+
+#[test]
+fn test_node_encode_decode() {
+	use trie_db::node::Value;
+	use sp_core::Blake2Hasher;
+	type TestCodec = NodeCodec<Blake2Hasher>;
+
+	let partial = vec![0xFF; 0x8000];
+	let number_nibble = 2 * partial.len();
+	assert!(number_nibble > trie_constants::NIBBLE_SIZE_BOUND);
+
+	let val = vec![1u8, 2, 3, 4];
+	let value = Value::Inline(&val);
+
+	let encoded = TestCodec::leaf_node(partial.into_iter(), number_nibble, value);
+	let _ = TestCodec::decode_plan(&encoded).unwrap();
+}
