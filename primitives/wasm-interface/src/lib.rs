@@ -383,6 +383,12 @@ pub trait Sandbox {
 	/// Returns `Some(_)` when the requested global variable could be found.
 	fn get_global_val(&self, instance_idx: u32, name: &str) -> Result<Option<Value>>;
 
+	/// Set the value of a global with the given `name`. The sandbox is determined by the
+	/// given `instance_idx` instance.
+	///
+	/// Returns `Ok(())` when the requested global variable could be modified.
+	fn set_global_val(&self, instance_idx: u32, name: &str, value: Value) -> Result<u32>;
+
 	/// Returns size in wasm pages of memory with id `memory_id`.
 	fn memory_size(&mut self, memory_id: MemoryId) -> Result<u32>;
 

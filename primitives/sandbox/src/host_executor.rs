@@ -176,6 +176,33 @@ pub struct Instance<T> {
 	_marker: marker::PhantomData<T>,
 }
 
+#[derive(Clone)]
+pub struct InstanceGlobals {
+	instance_idx: u32,
+}
+
+impl Default for InstanceGlobals {
+	fn default() -> Self {
+		Self {
+			instance_idx: u32::MAX,
+		}
+	}
+}
+
+impl super::InstanceGlobals for InstanceGlobals {
+	fn get_global_val(&self, name: &str) -> Option<Value> {
+		sandbox::get_global_val(self.instance_idx, name)
+	}
+
+	fn set_global_val(&self, name: &str, value: Value) -> Result<(), super::GlobalsSetError> {
+		match sandbox::set_global_val(self.instance_idx, name, value) {
+			env::ERROR_GLOBALS_OK => Ok(()),
+			env::ERROR_GLOBALS_NOT_FOUND => Err(super::GlobalsSetError::NotFound),
+			_ => Err(super::GlobalsSetError::Other),
+		}
+	}
+}
+
 /// The primary responsibility of this thunk is to deserialize arguments and
 /// call the original function, specified by the index.
 extern "C" fn dispatch_thunk<T>(
@@ -221,6 +248,7 @@ extern "C" fn dispatch_thunk<T>(
 impl<T> super::SandboxInstance<T> for Instance<T> {
 	type Memory = Memory;
 	type EnvironmentBuilder = EnvironmentDefinitionBuilder<T>;
+	type InstanceGlobals = InstanceGlobals;
 
 	fn new(
 		code: &[u8],
@@ -278,6 +306,10 @@ impl<T> super::SandboxInstance<T> for Instance<T> {
 
 	fn get_global_val(&self, name: &str) -> Option<Value> {
 		sandbox::get_global_val(self.instance_idx, name)
+	}
+
+	fn instance_globals(&self) -> Option<Self::InstanceGlobals> {
+		Some(InstanceGlobals { instance_idx: self.instance_idx })
 	}
 }
 

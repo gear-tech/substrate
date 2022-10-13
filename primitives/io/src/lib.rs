@@ -1656,6 +1656,19 @@ pub trait Sandbox {
 			.expect("Failed to get global from sandbox")
 	}
 
+	/// Set the value of a global with the given `name`. The sandbox is determined by the given
+	/// `instance_idx`.
+	fn set_global_val(
+		&mut self,
+		instance_idx: u32,
+		name: &str,
+		value: sp_wasm_interface::Value,
+	) -> u32 {
+		self.sandbox()
+			.set_global_val(instance_idx, name, value)
+			.expect("Failed to set global in sandbox")
+	}
+
 	fn memory_grow(&mut self, memory_idx: u32, size: u32) -> u32 {
 		self.sandbox()
 			.memory_grow(memory_idx, size)

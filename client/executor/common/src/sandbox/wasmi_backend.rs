@@ -347,3 +347,21 @@ pub fn invoke(
 pub fn get_global(instance: &wasmi::ModuleRef, name: &str) -> Option<Value> {
 	Some(instance.export_by_name(name)?.as_global()?.get().into())
 }
+
+/// Set global value by name
+pub fn set_global(instance: &wasmi::ModuleRef, name: &str, value: Value) -> std::result::Result<Option<()>, error::Error> {
+	let export = match instance.export_by_name(name) {
+		Some(e) => e,
+		None => return Ok(None),
+	};
+
+	let global = match export.as_global() {
+		Some(g) => g,
+		None => return Ok(None),
+	};
+
+	global
+		.set(value.into())
+		.map(|_| Some(()))
+		.map_err(error::Error::Wasmi)
+}
