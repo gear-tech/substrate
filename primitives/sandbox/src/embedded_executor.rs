@@ -251,9 +251,24 @@ pub struct Instance<T> {
 	_marker: PhantomData<T>,
 }
 
+/// Unit-type as InstanceGlobals for wasmi executor.
+#[derive(Clone, Default)]
+pub struct InstanceGlobals;
+
+impl super::InstanceGlobals for InstanceGlobals {
+	fn get_global_val(&self, _name: &str) -> Option<Value> {
+		None
+	}
+
+	fn set_global_val(&self, _name: &str, _value: Value) -> Result<(), super::GlobalsSetError> {
+		Err(super::GlobalsSetError::NotFound)
+	}
+}
+
 impl<T> super::SandboxInstance<T> for Instance<T> {
 	type Memory = Memory;
 	type EnvironmentBuilder = EnvironmentDefinitionBuilder<T>;
+	type InstanceGlobals = InstanceGlobals;
 
 	fn new(
 		code: &[u8],
@@ -294,6 +309,10 @@ impl<T> super::SandboxInstance<T> for Instance<T> {
 		let global = self.instance.export_by_name(name)?.as_global()?.get();
 
 		Some(to_interface(global))
+	}
+
+	fn instance_globals(&self) -> Option<Self::InstanceGlobals> {
+		None
 	}
 }
 
