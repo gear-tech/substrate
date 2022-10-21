@@ -486,6 +486,25 @@ impl MemoryTransfer for MemoryWrapper {
 			Ok(())
 		}
 	}
+
+	fn memory_grow(&mut self, pages: u32) -> Result<u32> {
+		let memory = &mut self.buffer.borrow_mut();
+		memory
+			.grow(pages)
+			.map_err(|e| {
+				Error::Sandbox(format!("Connot grow memory in wasmer sandbox executor: {}", e))
+			})
+			.map(|p| p.0)
+	}
+
+	fn memory_size(&mut self) -> u32 {
+		let memory = &mut self.buffer.borrow_mut();
+		memory.size().0
+	}
+
+	fn get_buff(&mut self) -> *mut u8 {
+		self.buffer.borrow_mut().data_ptr()
+	}
 }
 
 /// Get global value by name
@@ -500,4 +519,21 @@ pub fn get_global(instance: &wasmer::Instance, name: &str) -> Option<Value> {
 	};
 
 	Some(wasmtime_value)
+}
+
+/// Set global value by name
+pub fn set_global(instance: &wasmer::Instance, name: &str, value: Value) -> core::result::Result<Option<()>, crate::error::Error> {
+	let global = match instance.exports.get_global(name) {
+		Ok(g) => g,
+		Err(_) => return Ok(None),
+	};
+
+	let value = match value {
+		Value::I32(val) => wasmer::Val::I32(val),
+		Value::I64(val) => wasmer::Val::I64(val),
+		Value::F32(val) => wasmer::Val::F32(f32::from_bits(val)),
+		Value::F64(val) => wasmer::Val::F64(f64::from_bits(val)),
+	};
+
+	global.set(value).map(|_| Some(())).map_err(|e| crate::error::Error::Sandbox(e.message()))
 }

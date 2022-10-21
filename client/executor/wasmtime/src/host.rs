@@ -334,6 +334,43 @@ impl<'a> Sandbox for HostContext<'a> {
 			.map(|i| i.get_global_val(name))
 			.map_err(|e| e.to_string())
 	}
+
+	fn set_global_val(&self, instance_idx: u32, name: &str, value: sp_wasm_interface::Value) -> sp_wasm_interface::Result<u32> {
+		trace!(target: "sp-sandbox", "set_global_val, instance_idx={}", instance_idx);
+
+		let instance = self.sandbox_store()
+			.instance(instance_idx)
+			.map_err(|e| e.to_string())?;
+
+		let result = instance.set_global_val(name, value);
+
+		trace!(target: "sp-sandbox", "set_global_val, name={name}, value={value:?}, result={result:?}");
+		match result {
+			Ok(None) => Ok(sandbox_env::ERROR_GLOBALS_NOT_FOUND),
+			Ok(Some(_)) => Ok(sandbox_env::ERROR_GLOBALS_OK),
+			Err(_) => Ok(sandbox_env::ERROR_GLOBALS_OTHER),
+		}
+	}
+
+	fn memory_size(&mut self, memory_id: MemoryId) -> sp_wasm_interface::Result<u32> {
+		let mut m = self
+			.sandbox_store()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		Ok(m.memory_size())
+	}
+
+	fn memory_grow(&mut self, memory_id: MemoryId, pages_num: u32) -> sp_wasm_interface::Result<u32> {
+		let mut m = self.sandbox_store().memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		m.memory_grow(pages_num).map_err(|e| format!("{}", e))
+	}
+
+	fn get_buff(&mut self, memory_id: MemoryId) -> sp_wasm_interface::Result<*mut u8> {
+		let mut m = self.sandbox_store().memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
+		Ok(m.get_buff())
+	}
 }
 
 struct SandboxContext<'a, 'b> {
