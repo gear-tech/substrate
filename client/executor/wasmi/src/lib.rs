@@ -352,6 +352,51 @@ impl Sandbox for FunctionExecutor {
 			.map(|i| i.get_global_val(name))
 			.map_err(|e| e.to_string())
 	}
+
+	fn set_global_val(&self, instance_idx: u32, name: &str, value: sp_wasm_interface::Value) -> WResult<u32> {
+		trace!(target: "sp-sandbox", "set_global_val, instance_idx={}", instance_idx);
+
+		let instance = self.sandbox_store
+			.borrow()
+			.instance(instance_idx)
+			.map_err(|e| e.to_string())?;
+
+		let result = instance.set_global_val(name, value);
+
+		trace!(target: "sp-sandbox", "set_global_val, name={name}, value={value:?}, result={result:?}");
+		match result {
+			Ok(None) => Ok(sandbox_env::ERROR_GLOBALS_NOT_FOUND),
+			Ok(Some(_)) => Ok(sandbox_env::ERROR_GLOBALS_OK),
+			Err(_) => Ok(sandbox_env::ERROR_GLOBALS_OTHER),
+		}
+	}
+
+	fn memory_grow(&mut self, memory_id: MemoryId, pages: u32) -> WResult<u32> {
+		let mut m = self
+			.sandbox_store
+			.borrow_mut()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmi memory: {}", e))?;
+		m.memory_grow(pages).map_err(|e| format!("{}", e))
+	}
+
+	fn memory_size(&mut self, memory_id: MemoryId) -> WResult<u32> {
+		let mut m = self
+			.sandbox_store
+			.borrow_mut()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmi memory: {}", e))?;
+		Ok(m.memory_size())
+	}
+
+	fn get_buff(&mut self, memory_id: MemoryId) -> WResult<*mut u8> {
+		let mut m = self
+			.sandbox_store
+			.borrow_mut()
+			.memory(memory_id)
+			.map_err(|e| format!("Cannot get wasmi memory: {}", e))?;
+		Ok(m.get_buff())
+	}
 }
 
 /// Will be used on initialization of a module to resolve function and memory imports.

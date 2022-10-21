@@ -165,6 +165,21 @@ impl MemoryTransfer for MemoryWrapper {
 			Ok(())
 		})
 	}
+
+	fn memory_grow(&mut self, pages: u32) -> error::Result<u32> {
+		self.0
+			.grow(Pages(pages as usize))
+			.map_err(|e| Error::Sandbox(format!("Cannot grow memory in masmi sandbox executor: {}", e)))
+			.map(|p| p.0 as u32)
+	}
+
+	fn memory_size(&mut self) -> u32 {
+		self.0.current_size().0 as u32
+	}
+
+	fn get_buff(&mut self) -> *mut u8 {
+		self.0.direct_access_mut().as_mut().as_mut_ptr()
+	}
 }
 
 impl<'a> wasmi::Externals for GuestExternals<'a> {
@@ -331,4 +346,22 @@ pub fn invoke(
 /// Get global value by name
 pub fn get_global(instance: &wasmi::ModuleRef, name: &str) -> Option<Value> {
 	Some(instance.export_by_name(name)?.as_global()?.get().into())
+}
+
+/// Set global value by name
+pub fn set_global(instance: &wasmi::ModuleRef, name: &str, value: Value) -> std::result::Result<Option<()>, error::Error> {
+	let export = match instance.export_by_name(name) {
+		Some(e) => e,
+		None => return Ok(None),
+	};
+
+	let global = match export.as_global() {
+		Some(g) => g,
+		None => return Ok(None),
+	};
+
+	global
+		.set(value.into())
+		.map(|_| Some(()))
+		.map_err(error::Error::Wasmi)
 }
