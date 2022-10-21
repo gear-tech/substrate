@@ -224,7 +224,7 @@ pub enum GlobalsSetError {
 }
 
 /// This instance can be used for changing exported globals.
-pub trait InstanceGlobals: Sized + Clone + Default {
+pub trait InstanceGlobals: Sized + Clone {
 
 	/// Get the value from a global with the given `name`.
 	///

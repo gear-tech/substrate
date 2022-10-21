@@ -176,29 +176,24 @@ pub struct Instance<T> {
 	_marker: marker::PhantomData<T>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct InstanceGlobals {
-	instance_idx: u32,
-}
-
-impl Default for InstanceGlobals {
-	fn default() -> Self {
-		Self {
-			instance_idx: u32::MAX,
-		}
-	}
+	instance_idx: Option<u32>,
 }
 
 impl super::InstanceGlobals for InstanceGlobals {
 	fn get_global_val(&self, name: &str) -> Option<Value> {
-		sandbox::get_global_val(self.instance_idx, name)
+		self.instance_idx.and_then(|i| sandbox::get_global_val(i, name))
 	}
 
 	fn set_global_val(&self, name: &str, value: Value) -> Result<(), super::GlobalsSetError> {
-		match sandbox::set_global_val(self.instance_idx, name, value) {
-			env::ERROR_GLOBALS_OK => Ok(()),
-			env::ERROR_GLOBALS_NOT_FOUND => Err(super::GlobalsSetError::NotFound),
-			_ => Err(super::GlobalsSetError::Other),
+		match self.instance_idx {
+			None => Err(super::GlobalsSetError::Other),
+			Some(i) => match sandbox::set_global_val(i, name, value) {
+				env::ERROR_GLOBALS_OK => Ok(()),
+				env::ERROR_GLOBALS_NOT_FOUND => Err(super::GlobalsSetError::NotFound),
+				_ => Err(super::GlobalsSetError::Other),
+			}
 		}
 	}
 }
@@ -309,7 +304,7 @@ impl<T> super::SandboxInstance<T> for Instance<T> {
 	}
 
 	fn instance_globals(&self) -> Option<Self::InstanceGlobals> {
-		Some(InstanceGlobals { instance_idx: self.instance_idx })
+		Some(InstanceGlobals { instance_idx: Some(self.instance_idx) })
 	}
 }
 
