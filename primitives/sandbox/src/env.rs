@@ -86,6 +86,21 @@ pub const ERR_OUT_OF_BOUNDS: u32 = -2i32 as u32;
 /// For FFI purposes.
 pub const ERR_EXECUTION: u32 = -3i32 as u32;
 
+/// A global variable has been sucessfully changed.
+///
+/// For FFI purposes.
+pub const ERROR_GLOBALS_OK: u32 = 0;
+
+/// A global variable is not found.
+///
+/// For FFI purposes.
+pub const ERROR_GLOBALS_NOT_FOUND: u32 = u32::MAX;
+
+/// A global variable is immutable or has a different type.
+///
+/// For FFI purposes.
+pub const ERROR_GLOBALS_OTHER: u32 = u32::MAX - 1;
+
 #[cfg(test)]
 mod tests {
 	use super::*;

@@ -15,7 +15,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
 log = { version = "0.4", default-features = false }
-wasmi = { version = "0.13", default-features = false, features = ["virtual_memory"] }
+wasmi = { version = "0.13", default-features = false }
 sp-core = { version = "6.0.0", default-features = false, path = "../core" }
 sp-io = { version = "6.0.0", default-features = false, path = "../io" }
 sp-std = { version = "4.0.0", default-features = false, path = "../std" }
@@ -35,6 +35,7 @@ std = [
 	"sp-std/std",
 	"sp-wasm-interface/std",
 	"wasmi/std",
+	"wasmi/virtual_memory",
 ]
 strict = []
 wasmer-sandbox = []
