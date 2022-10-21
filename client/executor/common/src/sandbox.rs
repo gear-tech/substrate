@@ -37,12 +37,12 @@ use crate::{
 
 #[cfg(feature = "wasmer-sandbox")]
 use self::wasmer_backend::{
-	get_global as wasmer_get_global, instantiate as wasmer_instantiate, invoke as wasmer_invoke,
+	get_global as wasmer_get_global, set_global as wasmer_set_global, instantiate as wasmer_instantiate, invoke as wasmer_invoke,
 	new_memory as wasmer_new_memory, Backend as WasmerBackend,
 	MemoryWrapper as WasmerMemoryWrapper,
 };
 use self::wasmi_backend::{
-	get_global as wasmi_get_global, instantiate as wasmi_instantiate, invoke as wasmi_invoke,
+	get_global as wasmi_get_global, set_global as wasmi_set_global, instantiate as wasmi_instantiate, invoke as wasmi_invoke,
 	new_memory as wasmi_new_memory, MemoryWrapper as WasmiMemoryWrapper,
 };
 
@@ -212,6 +212,18 @@ impl SandboxInstance {
 			BackendInstance::Wasmer(wasmer_instance) => wasmer_get_global(wasmer_instance, name),
 		}
 	}
+
+	/// Set the value of a global with the given `name`.
+	///
+	/// Returns `Ok(Some(()))` if the global could be modified.
+	pub fn set_global_val(&self, name: &str, value: sp_wasm_interface::Value) -> std::result::Result<Option<()>, error::Error> {
+		match &self.backend_instance {
+			BackendInstance::Wasmi(wasmi_instance) => wasmi_set_global(wasmi_instance, name, value),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			BackendInstance::Wasmer(wasmer_instance) => wasmer_set_global(wasmer_instance, name, value),
+		}
+	}
 }
 
 /// Error occurred during instantiation of a sandboxed module.
@@ -375,6 +387,33 @@ impl util::MemoryTransfer for Memory {
 
 			#[cfg(feature = "wasmer-sandbox")]
 			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.write_from(dest_addr, source),
+		}
+	}
+	
+	fn memory_grow(&mut self, pages: u32) -> Result<u32> {
+		match self {
+			Memory::Wasmi(sandboxed_memory) => sandboxed_memory.memory_grow(pages),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.memory_grow(pages),
+		}
+	}
+
+	fn memory_size(&mut self) -> u32 {
+		match self {
+			Memory::Wasmi(sandboxed_memory) => sandboxed_memory.memory_size(),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.memory_size(),
+		}
+	}
+
+	fn get_buff(&mut self) -> *mut u8 {
+		match self {
+			Memory::Wasmi(sandboxed_memory) => sandboxed_memory.get_buff(),
+
+			#[cfg(feature = "wasmer-sandbox")]
+			Memory::Wasmer(sandboxed_memory) => sandboxed_memory.get_buff(),
 		}
 	}
 }
