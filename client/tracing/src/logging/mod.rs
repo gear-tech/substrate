@@ -34,7 +34,7 @@ pub use directives::*;
 pub use sc_tracing_proc_macro::*;
 
 use std::io;
-use tracing::{Subscriber};
+use tracing::Subscriber;
 use tracing_subscriber::{
 	filter::LevelFilter,
 	fmt::{
