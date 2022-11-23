@@ -90,17 +90,6 @@ fn to_log_level_filter(level_filter: Option<LevelFilter>) -> log::LevelFilter {
 	}
 }
 
-fn from_log_level_filter(l: log::LevelFilter) -> LevelFilter {
-  match l {
-    log::LevelFilter::Info => LevelFilter::INFO,
-    log::LevelFilter::Trace => LevelFilter::TRACE,
-    log::LevelFilter::Warn => LevelFilter::WARN,
-    log::LevelFilter::Error => LevelFilter::ERROR,
-    log::LevelFilter::Debug => LevelFilter::DEBUG,
-    log::LevelFilter::Off => LevelFilter::OFF,
-  }
-}
-
 /// Common implementation to get the subscriber.
 fn prepare_subscriber<N, E, F, W>(
 	directives: &str,
@@ -231,7 +220,7 @@ impl LoggerBuilder {
 			log_reloading: false,
 			force_colors: None,
 			detailed_output: false,
-      			max_level: None,
+			max_level: None,
 		}
 	}
 
@@ -279,8 +268,8 @@ impl LoggerBuilder {
 
   	/// Override log level.
 	pub fn with_max_level(&mut self, level: log::LevelFilter) -> &mut Self {
-		  self.max_level = Some(level);
-		  self
+		self.max_level = Some(level);
+		self
 	}
 
 	/// Initialize the global logger
@@ -294,7 +283,7 @@ impl LoggerBuilder {
 					Some(&profiling_targets),
 					self.force_colors,
 					self.detailed_output,
-          				self.max_level,
+					self.max_level,
 					|builder| enable_log_reloading!(builder),
 				)?;
 				let mut profiling =
@@ -313,7 +302,7 @@ impl LoggerBuilder {
 					Some(&profiling_targets),
 					self.force_colors,
 					self.detailed_output,
-          				self.max_level,
+					self.max_level,
 					|builder| builder,
 				)?;
 				let mut profiling =
@@ -333,7 +322,7 @@ impl LoggerBuilder {
 				None,
 				self.force_colors,
 				self.detailed_output,
-        			self.max_level,
+				self.max_level,
 				|builder| enable_log_reloading!(builder),
 			)?;
 
@@ -346,7 +335,7 @@ impl LoggerBuilder {
 				None,
 				self.force_colors,
 				self.detailed_output,
-	        		self.max_level,
+				self.max_level,
 				|builder| builder,
 			)?;
 
