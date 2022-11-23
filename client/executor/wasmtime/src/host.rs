@@ -26,11 +26,11 @@ use codec::{Decode, Encode};
 use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
 use sc_executor_common::{
 	error::Result,
-	sandbox::{self, SupervisorFuncIndex},
+	sandbox::{self, SupervisorFuncIndex, SandboxInstance},
 	util::MemoryTransfer,
 };
 use sp_sandbox::env as sandbox_env;
-use sp_wasm_interface::{FunctionContext, MemoryId, Pointer, Sandbox, WordSize};
+use sp_wasm_interface::{FunctionContext, MemoryId, Pointer, Sandbox, WordSize, HostPointer};
 
 use crate::{runtime::StoreData, util};
 
@@ -362,10 +362,18 @@ impl<'a> Sandbox for HostContext<'a> {
 		m.memory_grow(pages_num).map_err(|e| format!("{}", e))
 	}
 
-	fn get_buff(&mut self, memory_id: MemoryId) -> sp_wasm_interface::Result<*mut u8> {
+	fn get_buff(&mut self, memory_id: MemoryId) -> sp_wasm_interface::Result<HostPointer> {
 		let mut m = self.sandbox_store().memory(memory_id)
 			.map_err(|e| format!("Cannot get wasmer memory: {}", e))?;
-		Ok(m.get_buff())
+		Ok(m.get_buff() as HostPointer)
+	}
+
+	fn get_instance_ptr(&mut self, instance_id: u32) -> sp_wasm_interface::Result<HostPointer> {
+		let instance = self.sandbox_store()
+			.instance(instance_id)
+			.map_err(|e| e.to_string())?;
+
+		Ok(instance.as_ref() as *const SandboxInstance as HostPointer)
 	}
 }
 
