@@ -31,6 +31,8 @@
 
 use sp_std::vec::Vec;
 
+use sp_wasm_interface::HostPointer;
+
 #[cfg(feature = "std")]
 use tracing;
 
@@ -1681,10 +1683,14 @@ pub trait Sandbox {
 			.expect("Failed to get memory size from sandbox")
 	}
 
-	fn get_buff(&mut self, memory_idx: u32) -> u64 {
+	fn get_buff(&mut self, memory_idx: u32) -> HostPointer {
 		self.sandbox()
 			.get_buff(memory_idx)
-			.expect("Failed to get wasmo memory buffer addr from sandbox") as u64
+			.expect("Failed to get wasm memory buffer addr from sandbox")
+	}
+
+	fn get_instance_ptr(&mut self, instance_id: u32) -> HostPointer {
+		self.sandbox().get_instance_ptr(instance_id).expect("Failed to get instance ptr")
 	}
 }
 

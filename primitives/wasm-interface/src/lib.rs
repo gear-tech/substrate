@@ -333,6 +333,9 @@ pub trait FunctionContext {
 /// Sandbox memory identifier.
 pub type MemoryId = u32;
 
+/// Host pointer: suit both for 32-bit and 64-bit archs.
+pub type HostPointer = u64;
+
 /// Something that provides access to the sandbox.
 pub trait Sandbox {
 	/// Get sandbox memory from the `memory_id` instance at `offset` into the given buffer.
@@ -396,7 +399,12 @@ pub trait Sandbox {
 	fn memory_grow(&mut self, memory_id: MemoryId, pages_num: u32) -> Result<u32>;
 
 	/// Get host pointer to the begin of wasm memory with `memory_id`.
-	fn get_buff(&mut self, memory_id: MemoryId) -> Result<*mut u8>;
+	fn get_buff(&mut self, memory_id: MemoryId) -> Result<HostPointer>;
+
+	/// Get raw pointer to the executor host sandbox instance.
+	///
+	/// Returns Err if the instance `instance_id` does not exist.
+	fn get_instance_ptr(&mut self, instance_id: u32) -> Result<HostPointer>;
 }
 
 if_wasmtime_is_enabled! {

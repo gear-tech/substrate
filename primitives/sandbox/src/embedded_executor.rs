@@ -19,6 +19,7 @@
 
 use alloc::string::String;
 
+use sp_wasm_interface::HostPointer;
 use wasmi::{
 	memory_units::Pages, Externals, FuncInstance, FuncRef, GlobalDescriptor, GlobalRef,
 	ImportResolver, MemoryDescriptor, MemoryInstance, MemoryRef, Module, ModuleInstance, ModuleRef,
@@ -313,6 +314,10 @@ impl<T> super::SandboxInstance<T> for Instance<T> {
 
 	fn instance_globals(&self) -> Option<Self::InstanceGlobals> {
 		None
+	}
+
+	fn get_instance_ptr(&self) -> HostPointer {
+		unreachable!("Must not be called for embedded executor")
 	}
 }
 
