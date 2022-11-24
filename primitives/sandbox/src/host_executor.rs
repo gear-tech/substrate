@@ -21,6 +21,7 @@ use codec::{Decode, Encode};
 
 use sp_io::sandbox;
 use sp_std::{marker, mem, prelude::*, rc::Rc, slice, vec};
+use sp_wasm_interface::HostPointer;
 
 use crate::{env, Error, HostFuncType, ReturnValue, Value};
 
@@ -102,11 +103,17 @@ impl super::SandboxMemory for Memory {
 	}
 
 	fn grow(&self, pages: u32) -> Result<u32, Error> {
-		todo!()
+		let size = self.size();
+		sandbox::memory_grow(self.handle.memory_idx, pages);
+		Ok(size)
 	}
 
 	fn size(&self) -> u32 {
-		todo!()
+		sandbox::memory_size(self.handle.memory_idx)
+	}
+
+	unsafe fn get_buff(&self) -> HostPointer {
+		sandbox::get_buff(self.handle.memory_idx)
 	}
 }
 
@@ -299,6 +306,10 @@ impl<T> super::SandboxInstance<T> for Instance<T> {
 
 	fn instance_globals(&self) -> Option<Self::InstanceGlobals> {
 		Some(InstanceGlobals { instance_idx: Some(self.instance_idx) })
+	}
+
+	fn get_instance_ptr(&self) -> HostPointer {
+		sandbox::get_instance_ptr(self.instance_idx)
 	}
 }
 
