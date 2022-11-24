@@ -403,7 +403,7 @@ pub trait Sandbox {
 
 	/// Get raw pointer to the executor host sandbox instance.
 	///
-	/// Returns Err if instance is not exist for `instance_id`.
+	/// Returns Err if the instance `instance_id` does not exist.
 	fn get_instance_ptr(&mut self, instance_id: u32) -> Result<HostPointer>;
 }
 
