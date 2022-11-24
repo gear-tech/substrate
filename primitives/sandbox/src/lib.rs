@@ -48,6 +48,7 @@ pub mod host_executor;
 use sp_core::RuntimeDebug;
 use sp_std::prelude::*;
 
+use sp_wasm_interface::HostPointer;
 pub use sp_wasm_interface::{ReturnValue, Value};
 
 #[cfg(not(all(feature = "wasmer-sandbox", not(feature = "std"))))]
@@ -119,13 +120,16 @@ pub trait SandboxMemory: Sized + Clone {
 
 	/// Grow memory with provided number of pages.
 	///
-	/// Returns `Err` if attempted to allocate more memory than permited by the limit.
+	/// Returns `Err` if attempted to allocate more memory than permitted by the limit.
 	fn grow(&self, pages: u32) -> Result<u32, Error>;
 
 	/// Returns current memory size.
 	///
 	/// Maximum memory size cannot exceed 65536 pages or 4GiB.
 	fn size(&self) -> u32;
+
+	/// Returns pointer to the begin of wasm mem buffer
+	unsafe fn get_buff(&self) -> HostPointer;
 }
 
 /// Struct that can be used for defining an environment for a sandboxed module.
@@ -208,6 +212,9 @@ pub trait SandboxInstance<State>: Sized {
 	///
 	/// Returns `None` if the executor doesn't support the interface.
 	fn instance_globals(&self) -> Option<Self::InstanceGlobals>;
+
+	/// Get raw pointer to the executor host sandbox instance.
+	fn get_instance_ptr(&self) -> HostPointer;
 }
 
 /// Error that can occur while using this crate.
