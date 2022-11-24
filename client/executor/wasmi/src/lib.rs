@@ -33,14 +33,14 @@ use sc_allocator::AllocationStats;
 use sc_executor_common::{
 	error::{Error, MessageWithBacktrace, WasmError},
 	runtime_blob::{DataSegmentsSnapshot, RuntimeBlob},
-	sandbox,
+	sandbox::{self, SandboxInstance},
 	util::MemoryTransfer,
 	wasm_runtime::{InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
 use sp_sandbox::env as sandbox_env;
 use sp_wasm_interface::{
-	Function, FunctionContext, MemoryId, Pointer, Result as WResult, Sandbox, WordSize,
+	Function, FunctionContext, MemoryId, Pointer, Result as WResult, Sandbox, WordSize, HostPointer,
 };
 
 struct FunctionExecutor {
@@ -352,13 +352,22 @@ impl Sandbox for FunctionExecutor {
 		Ok(m.memory_size())
 	}
 
-	fn get_buff(&mut self, memory_id: MemoryId) -> WResult<*mut u8> {
+	fn get_buff(&mut self, memory_id: MemoryId) -> WResult<HostPointer> {
 		let mut m = self
 			.sandbox_store
 			.borrow_mut()
 			.memory(memory_id)
 			.map_err(|e| format!("Cannot get wasmi memory: {}", e))?;
-		Ok(m.get_buff())
+		Ok(m.get_buff() as HostPointer)
+	}
+
+	fn get_instance_ptr(&mut self, instance_id: u32) -> WResult<HostPointer> {
+		let instance = self.sandbox_store
+			.borrow()
+			.instance(instance_id)
+			.map_err(|e| e.to_string())?;
+
+		Ok(instance.as_ref() as *const SandboxInstance as HostPointer)
 	}
 }
 
