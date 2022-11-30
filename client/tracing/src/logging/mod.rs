@@ -76,18 +76,16 @@ macro_rules! enable_log_reloading {
 	}};
 }
 
-/// Convert a `Option<LevelFilter>` to a [`log::LevelFilter`].
-///
-/// `None` is interpreted as `Info`.
-fn to_log_level_filter(level_filter: Option<LevelFilter>) -> log::LevelFilter {
-	match level_filter {
-		Some(LevelFilter::INFO) | None => log::LevelFilter::Info,
-		Some(LevelFilter::TRACE) => log::LevelFilter::Trace,
-		Some(LevelFilter::WARN) => log::LevelFilter::Warn,
-		Some(LevelFilter::ERROR) => log::LevelFilter::Error,
-		Some(LevelFilter::DEBUG) => log::LevelFilter::Debug,
-		Some(LevelFilter::OFF) => log::LevelFilter::Off,
-	}
+/// Convert a [`log::LevelFilter`] to a `Option<LevelFilter>`.
+fn from_log_level_filter(level: log::LevelFilter) -> LevelFilter {
+    match level {
+        log::LevelFilter::Info => LevelFilter::INFO,
+        log::LevelFilter::Trace => LevelFilter::TRACE,
+        log::LevelFilter::Warn => LevelFilter::WARN,
+        log::LevelFilter::Error => LevelFilter::ERROR,
+        log::LevelFilter::Debug => LevelFilter::DEBUG,
+        log::LevelFilter::Off => LevelFilter::OFF,
+    }
 }
 
 /// Common implementation to get the subscriber.
