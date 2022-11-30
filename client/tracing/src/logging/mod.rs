@@ -90,12 +90,25 @@ fn to_log_level_filter(level_filter: Option<LevelFilter>) -> log::LevelFilter {
 	}
 }
 
+/// Convert a [`log::LevelFilter`] to a `Option<LevelFilter>`.
+fn from_log_level_filter(level: log::LevelFilter) -> LevelFilter {
+    match level {
+        log::LevelFilter::Info => LevelFilter::INFO,
+        log::LevelFilter::Trace => LevelFilter::TRACE,
+        log::LevelFilter::Warn => LevelFilter::WARN,
+        log::LevelFilter::Error => LevelFilter::ERROR,
+        log::LevelFilter::Debug => LevelFilter::DEBUG,
+        log::LevelFilter::Off => LevelFilter::OFF,
+    }
+}
+
 /// Common implementation to get the subscriber.
 fn prepare_subscriber<N, E, F, W>(
 	directives: &str,
 	profiling_targets: Option<&str>,
 	force_colors: Option<bool>,
 	detailed_output: bool,
+  	max_level_override: Option<log::LevelFilter>,
 	builder_hook: impl Fn(
 		SubscriberBuilder<format::DefaultFields, EventFormat, EnvFilter, DefaultLogger>,
 	) -> SubscriberBuilder<N, E, F, W>,
@@ -160,7 +173,7 @@ where
 	}
 
 	let max_level_hint = Layer::<FmtSubscriber>::max_level_hint(&env_filter);
-	let max_level = to_log_level_filter(max_level_hint);
+	let max_level = max_level_override.unwrap_or(to_log_level_filter(max_level_hint));
 
 	tracing_log::LogTracer::builder().with_max_level(max_level).init()?;
 
@@ -191,6 +204,8 @@ where
 
 	let builder = builder_hook(builder);
 
+  	let builder = builder.with_max_level(from_log_level_filter(max_level));
+
 	let subscriber = builder.finish().with(PrefixLayer);
 
 	Ok(subscriber)
@@ -204,6 +219,7 @@ pub struct LoggerBuilder {
 	log_reloading: bool,
 	force_colors: Option<bool>,
 	detailed_output: bool,
+  	max_level: Option<log::LevelFilter>,
 }
 
 impl LoggerBuilder {
@@ -216,6 +232,7 @@ impl LoggerBuilder {
 			log_reloading: false,
 			force_colors: None,
 			detailed_output: false,
+			max_level: None,
 		}
 	}
 
@@ -261,6 +278,12 @@ impl LoggerBuilder {
 		self
 	}
 
+  	/// Override log level.
+	pub fn with_max_level(&mut self, level: log::LevelFilter) -> &mut Self {
+		self.max_level = Some(level);
+		self
+	}
+
 	/// Initialize the global logger
 	///
 	/// This sets various global logging and tracing instances and thus may only be called once.
@@ -272,6 +295,7 @@ impl LoggerBuilder {
 					Some(&profiling_targets),
 					self.force_colors,
 					self.detailed_output,
+					self.max_level,
 					|builder| enable_log_reloading!(builder),
 				)?;
 				let mut profiling =
@@ -290,6 +314,7 @@ impl LoggerBuilder {
 					Some(&profiling_targets),
 					self.force_colors,
 					self.detailed_output,
+					self.max_level,
 					|builder| builder,
 				)?;
 				let mut profiling =
@@ -309,6 +334,7 @@ impl LoggerBuilder {
 				None,
 				self.force_colors,
 				self.detailed_output,
+				self.max_level,
 				|builder| enable_log_reloading!(builder),
 			)?;
 
@@ -321,6 +347,7 @@ impl LoggerBuilder {
 				None,
 				self.force_colors,
 				self.detailed_output,
+				self.max_level,
 				|builder| builder,
 			)?;
 
