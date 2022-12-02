@@ -204,17 +204,17 @@ where
 
 	let builder = builder_hook(builder);
 
-	  let builder = builder.with_max_level(
-	      if max_level_override.is_none() {
-            // # NOTE
-            //
-            // Have to re-write this line since `with_max_level` will change
-            // a type parameter of `Subscriber`.
-            max_level_hint.unwrap_or(LevelFilter::INFO)
-        } else {
-            from_log_level_filter(max_level)
-        }
-    );
+	  // let builder = builder.with_max_level(
+	  //     if max_level_override.is_none() {
+    //         // # NOTE
+    //         //
+    //         // Have to re-write this line since `with_max_level` will change
+    //         // a type parameter of `Subscriber`.
+    //         max_level_hint.unwrap_or(LevelFilter::INFO)
+    //     } else {
+    //         from_log_level_filter(max_level)
+    //     }
+    // );
 
 	let subscriber = builder.finish().with(PrefixLayer);
 
