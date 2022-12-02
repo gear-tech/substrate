@@ -90,18 +90,6 @@ fn to_log_level_filter(level_filter: Option<LevelFilter>) -> log::LevelFilter {
 	}
 }
 
-/// Convert a [`log::LevelFilter`] to a `Option<LevelFilter>`.
-fn from_log_level_filter(level: log::LevelFilter) -> LevelFilter {
-    match level {
-        log::LevelFilter::Info => LevelFilter::INFO,
-        log::LevelFilter::Trace => LevelFilter::TRACE,
-        log::LevelFilter::Warn => LevelFilter::WARN,
-        log::LevelFilter::Error => LevelFilter::ERROR,
-        log::LevelFilter::Debug => LevelFilter::DEBUG,
-        log::LevelFilter::Off => LevelFilter::OFF,
-    }
-}
-
 /// Common implementation to get the subscriber.
 fn prepare_subscriber<N, E, F, W>(
 	directives: &str,
@@ -155,12 +143,6 @@ where
 				.expect("provided directive is valid"),
 		);
 
-	if let Ok(lvl) = std::env::var("RUST_LOG") {
-		if lvl != "" {
-			env_filter = parse_user_directives(env_filter, &lvl)?;
-		}
-	}
-
 	if directives != "" {
 		env_filter = parse_user_directives(env_filter, directives)?;
 	}
@@ -176,6 +158,16 @@ where
 	let max_level = max_level_override.unwrap_or(to_log_level_filter(max_level_hint));
 
 	tracing_log::LogTracer::builder().with_max_level(max_level).init()?;
+
+    if let Ok(mut lvl) = std::env::var("RUST_LOG") {
+		    if lvl != "" {
+            if !max_level_override.is_none() {
+                lvl = filter_directives(max_level, &lvl)
+            }
+
+            env_filter = parse_user_directives(env_filter, &lvl)?;
+		    }
+	  }
 
 	// If we're only logging `INFO` entries then we'll use a simplified logging format.
 	let detailed_output = match max_level_hint {
@@ -194,6 +186,7 @@ where
 		enable_color,
 		dup_to_stdout: !atty::is(atty::Stream::Stderr) && atty::is(atty::Stream::Stdout),
 	};
+
 	let builder = FmtSubscriber::builder().with_env_filter(env_filter);
 
 	let builder = builder.with_span_events(format::FmtSpan::NONE);
@@ -203,18 +196,6 @@ where
 	let builder = builder.event_format(event_format);
 
 	let builder = builder_hook(builder);
-
-	  // let builder = builder.with_max_level(
-	  //     if max_level_override.is_none() {
-    //         // # NOTE
-    //         //
-    //         // Have to re-write this line since `with_max_level` will change
-    //         // a type parameter of `Subscriber`.
-    //         max_level_hint.unwrap_or(LevelFilter::INFO)
-    //     } else {
-    //         from_log_level_filter(max_level)
-    //     }
-    // );
 
 	let subscriber = builder.finish().with(PrefixLayer);
 
