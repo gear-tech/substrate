@@ -143,6 +143,16 @@ where
 				.expect("provided directive is valid"),
 		);
 
+    if let Ok(mut lvl) = std::env::var("RUST_LOG") {
+        if let Some(max_level) = max_level_override {
+            lvl = filter_directives(max_level, &lvl)
+        }
+
+		    if lvl != "" {
+            env_filter = parse_user_directives(env_filter, &lvl)?;
+		    }
+	  }
+
 	if directives != "" {
 		env_filter = parse_user_directives(env_filter, directives)?;
 	}
@@ -158,16 +168,6 @@ where
 	let max_level = max_level_override.unwrap_or(to_log_level_filter(max_level_hint));
 
 	tracing_log::LogTracer::builder().with_max_level(max_level).init()?;
-
-    if let Ok(mut lvl) = std::env::var("RUST_LOG") {
-		    if lvl != "" {
-            if !max_level_override.is_none() {
-                lvl = filter_directives(max_level, &lvl)
-            }
-
-            env_filter = parse_user_directives(env_filter, &lvl)?;
-		    }
-	  }
 
 	// If we're only logging `INFO` entries then we'll use a simplified logging format.
 	let detailed_output = match max_level_hint {
