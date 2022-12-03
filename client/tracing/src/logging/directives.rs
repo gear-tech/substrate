@@ -27,6 +27,20 @@ static DEFAULT_DIRECTIVES: OnceCell<Mutex<Vec<String>>> = OnceCell::new();
 // Current state of log filter
 static CURRENT_DIRECTIVES: OnceCell<Mutex<Vec<String>>> = OnceCell::new();
 
+/// Filiter directives with log level.
+pub fn filter_directives(lvl: log::LevelFilter, dir: &str) -> String {
+    dir.split(",").filter(|dir|{
+        match lvl {
+            log::LevelFilter::Off => false,
+            log::LevelFilter::Error => dir.contains("error"),
+            log::LevelFilter::Warn => dir.contains("error") || dir.contains("warn"),
+            log::LevelFilter::Info => dir.contains("error") || dir.contains("warn") || dir.contains("info"),
+            log::LevelFilter::Debug => dir.contains("error") || dir.contains("warn") || dir.contains("info") || dir.contains("debug"),
+            log::LevelFilter::Trace => true
+        }
+    }).collect::<Vec<&str>>().join(",")
+}
+
 /// Add log filter directive(s) to the defaults
 ///
 /// The syntax is identical to the CLI `<target>=<level>`:
