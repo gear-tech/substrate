@@ -323,7 +323,7 @@ try-runtime = [
 	"pallet-whitelist/try-runtime",
 ]
 # Force `sp-sandbox` to call into the host resident executor. One still need to make sure
-# that `sc-executor` gets the `wasmer-sandbox` feature which happens automatically when
+# that `sc-executor` gets the `host-sandbox` feature which happens automatically when
 # specified on the command line.
 # Don't use that on a production chain.
-wasmer-sandbox = ["sp-sandbox/wasmer-sandbox"]
+host-sandbox = ["sp-sandbox/host-sandbox"]
