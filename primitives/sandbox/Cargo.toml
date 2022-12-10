@@ -38,4 +38,4 @@ std = [
 	"wasmi/virtual_memory",
 ]
 strict = []
-wasmer-sandbox = []
+host-sandbox = []
