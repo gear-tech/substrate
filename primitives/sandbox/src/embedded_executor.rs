@@ -75,13 +75,6 @@ impl super::SandboxMemory for Memory {
 	}
 }
 
-impl Memory {
-	/// Returns pointer to the begin of wasm mem buffer
-	pub unsafe fn get_buff(&self) -> *mut u8 {
-		self.memref.direct_access_mut().as_mut().as_mut_ptr()
-	}
-}
-
 struct HostFuncIndex(usize);
 
 struct DefinedHostFunctions<T> {
