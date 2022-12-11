@@ -32,6 +32,4 @@ wasmer-cache = { version = "2.2.1", optional = true }
 default = []
 host-sandbox = [
 	"wasmer",
-	"wasmer/default-singlepass",
-	"wasmer/default-universal",
 ]
