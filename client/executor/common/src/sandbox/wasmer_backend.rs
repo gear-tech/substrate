@@ -140,7 +140,7 @@ pub fn instantiate(
 	wasm: &[u8],
 	guest_env: GuestEnvironment,
 	sandbox_context: &mut dyn SandboxContext,
-) -> std::result::Result<Rc<SandboxInstance>, InstantiationError> {
+) -> std::result::Result<SandboxInstance, InstantiationError> {
 	#[cfg(feature = "wasmer-cache")]
 	let module = match get_cached_module(wasm, &context.store) {
 		Ok(module) => {
@@ -250,10 +250,10 @@ pub fn instantiate(
 		})
 	})?;
 
-	Ok(Rc::new(SandboxInstance {
+	Ok(SandboxInstance {
 		backend_instance: BackendInstance::Wasmer(instance),
 		guest_to_supervisor_mapping: guest_env.guest_to_supervisor_mapping,
-	}))
+	})
 }
 
 fn dispatch_function(
