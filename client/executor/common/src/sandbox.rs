@@ -24,7 +24,7 @@
 mod wasmer_backend;
 mod wasmi_backend;
 
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, rc::Rc, pin::Pin};
 
 use codec::Decode;
 use sp_sandbox::env as sandbox_env;
@@ -306,7 +306,7 @@ impl GuestEnvironment {
 /// To finish off the instantiation the user must call `register`.
 #[must_use]
 pub struct UnregisteredInstance {
-	sandbox_instance: Rc<SandboxInstance>,
+	sandbox_instance: SandboxInstance,
 }
 
 impl UnregisteredInstance {
@@ -450,7 +450,7 @@ pub struct Store<DT> {
 	/// Stores the instance and the dispatch thunk associated to per instance.
 	///
 	/// Instances are `Some` until torn down.
-	instances: Vec<Option<(Rc<SandboxInstance>, DT)>>,
+	instances: Vec<Option<(Pin<Rc<SandboxInstance>>, DT)>>,
 	/// Memories are `Some` until torn down.
 	memories: Vec<Option<Memory>>,
 	backend_context: BackendContext,
@@ -500,7 +500,7 @@ impl<DT: Clone> Store<DT> {
 	///
 	/// Returns `Err` If `instance_idx` isn't a valid index of an instance or
 	/// instance is already torndown.
-	pub fn instance(&self, instance_idx: u32) -> Result<Rc<SandboxInstance>> {
+	pub fn instance(&self, instance_idx: u32) -> Result<Pin<Rc<SandboxInstance>>> {
 		self.instances
 			.get(instance_idx as usize)
 			.ok_or("Trying to access a non-existent instance")?
@@ -604,11 +604,11 @@ impl<DT: Clone> Store<DT> {
 impl<DT> Store<DT> {
 	fn register_sandbox_instance(
 		&mut self,
-		sandbox_instance: Rc<SandboxInstance>,
+		sandbox_instance: SandboxInstance,
 		dispatch_thunk: DT,
 	) -> u32 {
 		let instance_idx = self.instances.len();
-		self.instances.push(Some((sandbox_instance, dispatch_thunk)));
+		self.instances.push(Some((Rc::pin(sandbox_instance), dispatch_thunk)));
 		instance_idx as u32
 	}
 }
