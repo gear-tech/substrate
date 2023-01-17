@@ -367,7 +367,7 @@ impl Sandbox for FunctionExecutor {
 			.instance(instance_id)
 			.map_err(|e| e.to_string())?;
 
-		Ok(instance.as_ref() as *const SandboxInstance as HostPointer)
+		Ok(instance.as_ref().get_ref() as *const SandboxInstance as HostPointer)
 	}
 }
 
