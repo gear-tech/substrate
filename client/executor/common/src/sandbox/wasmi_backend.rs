@@ -18,7 +18,7 @@
 
 //! Wasmi specific impls for sandbox
 
-use std::{fmt, rc::Rc};
+use std::fmt;
 
 use codec::{Decode, Encode};
 use sp_sandbox::HostError;
@@ -299,18 +299,18 @@ pub fn instantiate(
 	wasm: &[u8],
 	guest_env: GuestEnvironment,
 	sandbox_context: &mut dyn SandboxContext,
-) -> std::result::Result<Rc<SandboxInstance>, InstantiationError> {
+) -> std::result::Result<SandboxInstance, InstantiationError> {
 	let wasmi_module = Module::from_buffer(wasm).map_err(|_| InstantiationError::ModuleDecoding)?;
 	let wasmi_instance = ModuleInstance::new(&wasmi_module, &guest_env.imports)
 		.map_err(|_| InstantiationError::Instantiation)?;
 
-	let sandbox_instance = Rc::new(SandboxInstance {
+	let sandbox_instance = SandboxInstance {
 		// In general, it's not a very good idea to use `.not_started_instance()` for
 		// anything but for extracting memory and tables. But in this particular case, we
 		// are extracting for the purpose of running `start` function which should be ok.
 		backend_instance: BackendInstance::Wasmi(wasmi_instance.not_started_instance().clone()),
 		guest_to_supervisor_mapping: guest_env.guest_to_supervisor_mapping,
-	});
+	};
 
 	with_guest_externals(&sandbox_instance, |guest_externals| {
 		SandboxContextStore::using(sandbox_context, || {
