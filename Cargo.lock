@@ -5836,6 +5836,7 @@ version = "7.0.0"
 dependencies = [
  "bitflags",
  "parity-scale-codec",
+ "scale-info",
  "sp-runtime",
  "sp-std",
  "sp-weights",
@@ -8449,6 +8450,7 @@ dependencies = [
  "sc-network",
  "sc-network-test",
  "sc-telemetry",
+ "scale-info",
  "schnorrkel",
  "sp-api",
  "sp-application-crypto",
@@ -10287,6 +10289,7 @@ dependencies = [
  "futures",
  "impl-trait-for-tuples",
  "parity-scale-codec",
+ "scale-info",
  "sp-core",
  "sp-runtime",
  "sp-std",
