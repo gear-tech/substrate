@@ -28,14 +28,13 @@ use wasmi::{
 	TableRef,
 };
 
-use codec::{Decode, Encode};
-use sc_allocator::AllocationStats;
+use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
 use sc_executor_common::{
 	error::{Error, MessageWithBacktrace, WasmError},
 	runtime_blob::{DataSegmentsSnapshot, RuntimeBlob},
 	sandbox::{self, SandboxInstance},
 	util::MemoryTransfer,
-	wasm_runtime::{InvokeMethod, WasmInstance, WasmModule},
+	wasm_runtime::{HeapAllocStrategy, InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
 use sp_sandbox::env as sandbox_env;
