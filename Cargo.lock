@@ -2680,6 +2680,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs4"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ea55201cc351fdb478217c0fb641b59813da9b4efe4c414a9d8f989a657d149"
+dependencies = [
+ "libc",
+ "rustix 0.35.13",
+ "winapi",
+]
+
+[[package]]
 name = "fs_extra"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9297,9 +9308,9 @@ name = "sc-storage-monitor"
 version = "0.1.0"
 dependencies = [
  "clap 4.0.32",
+ "fs4",
  "futures",
  "log",
- "nix 0.26.1",
  "sc-client-db",
  "sc-utils",
  "sp-core",
