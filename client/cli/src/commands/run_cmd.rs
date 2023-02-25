@@ -264,6 +264,9 @@ pub struct RunCmd {
 	/// When `--dev` is given and no explicit `--base-path`, this option is implied.
 	#[arg(long, conflicts_with = "base_path")]
 	pub tmp: bool,
+
+	#[arg(long, default_value_t = 0x4000)]
+	pub default_heap_pages: u32,
 }
 
 impl RunCmd {
@@ -492,6 +495,10 @@ impl CliConfiguration for RunCmd {
 				None => None,
 			}
 		})
+	}
+
+	fn default_heap_pages(&self) -> Result<Option<u64>> {
+		Ok(Some(self.default_heap_pages as u64))
 	}
 }
 
