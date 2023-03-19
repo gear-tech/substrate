@@ -112,10 +112,10 @@ impl EntryPoint {
 	}
 }
 
-/// Wrapper around [`Memory`] that implements [`sc_allocator::Memory`].
+/// Wrapper around [`Memory`] that implements [`sp_allocator::Memory`].
 pub(crate) struct MemoryWrapper<'a, C>(pub &'a wasmtime::Memory, pub &'a mut C);
 
-impl<C: AsContextMut> sc_allocator::Memory for MemoryWrapper<'_, C> {
+impl<C: AsContextMut> sp_allocator::Memory for MemoryWrapper<'_, C> {
 	fn with_access<R>(&self, run: impl FnOnce(&[u8]) -> R) -> R {
 		run(self.0.data(&self.1))
 	}

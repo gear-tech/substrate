@@ -67,9 +67,8 @@
 //!   wasted. This is more pronounced (in terms of absolute heap amounts) with larger allocation
 //!   sizes.
 
-use crate::{Error, Memory, MAX_WASM_PAGES, PAGE_SIZE};
-pub use sp_core::MAX_POSSIBLE_ALLOCATION;
-use sp_wasm_interface::{Pointer, WordSize};
+use crate::{Error, Memory, MAX_POSSIBLE_ALLOCATION, MAX_WASM_PAGES, PAGE_SIZE};
+use sp_wasm_interface_common::{Pointer, WordSize};
 use std::{
 	cmp::{max, min},
 	mem,

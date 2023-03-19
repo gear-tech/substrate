@@ -28,19 +28,19 @@ use wasmi::{
 	TableRef,
 };
 
-use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
+use sp_allocator::AllocationStats;
 use sc_executor_common::{
 	error::{Error, MessageWithBacktrace, WasmError},
 	runtime_blob::{DataSegmentsSnapshot, RuntimeBlob},
 	wasm_runtime::{HeapAllocStrategy, InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
-use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, WordSize};
+use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, WordSize, wasmi_impl};
 
 /// Wrapper around [`MemorRef`] that implements [`sc_allocator::Memory`].
 struct MemoryWrapper<'a>(&'a MemoryRef);
 
-impl sc_allocator::Memory for MemoryWrapper<'_> {
+impl sp_allocator::Memory for MemoryWrapper<'_> {
 	fn with_access_mut<R>(&mut self, run: impl FnOnce(&mut [u8]) -> R) -> R {
 		self.0.with_direct_access_mut(run)
 	}
@@ -73,7 +73,7 @@ impl sc_allocator::Memory for MemoryWrapper<'_> {
 }
 
 struct FunctionExecutor {
-	heap: RefCell<sc_allocator::FreeingBumpHeapAllocator>,
+	heap: RefCell<sp_allocator::FreeingBumpHeapAllocator>,
 	memory: MemoryRef,
 	host_functions: Arc<Vec<&'static dyn Function>>,
 	allow_missing_func_imports: bool,
@@ -90,7 +90,7 @@ impl FunctionExecutor {
 		missing_functions: Arc<Vec<String>>,
 	) -> Result<Self, Error> {
 		Ok(FunctionExecutor {
-			heap: RefCell::new(FreeingBumpHeapAllocator::new(heap_base)),
+			heap: RefCell::new(sp_allocator::FreeingBumpHeapAllocator::new(heap_base)),
 			memory: m,
 			host_functions,
 			allow_missing_func_imports,
@@ -207,14 +207,14 @@ impl wasmi::Externals for FunctionExecutor {
 		index: usize,
 		args: wasmi::RuntimeArgs,
 	) -> Result<Option<wasmi::RuntimeValue>, wasmi::Trap> {
-		let mut args = args.as_ref().iter().copied().map(Into::into);
+		let mut args = args.as_ref().iter().copied().map(wasmi_impl::into_value);
 
 		if let Some(function) = self.host_functions.clone().get(index) {
 			function
 				.execute(self, &mut args)
 				.map_err(|msg| Error::FunctionExecution(function.name().to_string(), msg))
 				.map_err(wasmi::Trap::from)
-				.map(|v| v.map(Into::into))
+				.map(|v| v.map(wasmi_impl::from_value))
 		} else if self.allow_missing_func_imports &&
 			index >= self.host_functions.len() &&
 			index < self.host_functions.len() + self.missing_functions.len()
@@ -583,11 +583,11 @@ impl WasmInstance for WasmiInstance {
 	fn get_global_const(&mut self, name: &str) -> Result<Option<sp_wasm_interface::Value>, Error> {
 		match self.instance.export_by_name(name) {
 			Some(global) => Ok(Some(
-				global
+				wasmi_impl::into_value(global
 					.as_global()
 					.ok_or_else(|| format!("`{}` is not a global", name))?
 					.get()
-					.into(),
+					),
 			)),
 			None => Ok(None),
 		}

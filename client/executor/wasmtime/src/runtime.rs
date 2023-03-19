@@ -24,7 +24,7 @@ use crate::{
 	util::{self, replace_strategy_if_broken},
 };
 
-use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
+use sp_allocator::{AllocationStats, FreeingBumpHeapAllocator};
 use sc_executor_common::{
 	error::{Result, WasmError},
 	runtime_blob::{
@@ -42,7 +42,7 @@ use std::{
 		Arc,
 	},
 };
-use wasmtime::{AsContext, Engine, Memory, Table};
+use wasmtime::{AsContext, Engine};
 
 #[derive(Default)]
 pub(crate) struct StoreData {
