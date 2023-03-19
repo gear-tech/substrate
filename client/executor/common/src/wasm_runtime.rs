@@ -21,7 +21,7 @@
 use crate::error::Error;
 use sp_wasm_interface::Value;
 
-pub use sc_allocator::AllocationStats;
+pub use sp_allocator::AllocationStats;
 
 /// A method to be used to find the entrypoint when calling into the runtime
 ///

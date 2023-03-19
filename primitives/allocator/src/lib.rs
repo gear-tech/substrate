@@ -20,10 +20,22 @@
 //! This crate provides the following allocator implementations:
 //! - A freeing-bump allocator: [`FreeingBumpHeapAllocator`](freeing_bump::FreeingBumpHeapAllocator)
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 #![warn(missing_docs)]
 
+#[cfg(feature = "std")]
 mod error;
+#[cfg(feature = "std")]
 mod freeing_bump;
 
+#[cfg(feature = "std")]
 pub use error::Error;
+#[cfg(feature = "std")]
 pub use freeing_bump::{AllocationStats, FreeingBumpHeapAllocator};
+
+/// The maximum number of bytes that can be allocated at one time.
+// The maximum possible allocation size was chosen rather arbitrary, 32 MiB should be enough for
+// everybody.
+// 2^25 bytes, 32 MiB
+pub const MAX_POSSIBLE_ALLOCATION: u32 = 33_554_432;

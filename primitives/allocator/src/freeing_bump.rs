@@ -67,10 +67,10 @@
 //!   wasted. This is more pronounced (in terms of absolute heap amounts) with larger allocation
 //!   sizes.
 
-use crate::Error;
-pub use sp_core::MAX_POSSIBLE_ALLOCATION;
-use sp_wasm_interface::{Pointer, WordSize};
-use std::{
+use crate::{Error, MAX_POSSIBLE_ALLOCATION};
+use sp_wasm_interface_common::{Pointer, WordSize};
+use core::{
+    cmp,
 	mem,
 	ops::{Index, IndexMut, Range},
 };
@@ -437,7 +437,7 @@ impl FreeingBumpHeapAllocator {
 		self.stats.bytes_allocated += order.size() + HEADER_SIZE;
 		self.stats.bytes_allocated_sum += u128::from(order.size() + HEADER_SIZE);
 		self.stats.bytes_allocated_peak =
-			std::cmp::max(self.stats.bytes_allocated_peak, self.stats.bytes_allocated);
+			cmp::max(self.stats.bytes_allocated_peak, self.stats.bytes_allocated);
 		self.stats.address_space_used = self.bumper - self.original_heap_base;
 
 		log::trace!(target: LOG_TARGET, "after allocation: {:?}", self.stats);
