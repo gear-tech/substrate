@@ -35,6 +35,7 @@ use sc_executor_common::{
 };
 use sp_runtime_interface::unpack_ptr_and_len;
 use sp_wasm_interface::{HostFunctions, Pointer, Value, WordSize};
+pub use sp_wasm_interface::StoreData;
 use std::{
 	path::{Path, PathBuf},
 	sync::{
@@ -42,29 +43,7 @@ use std::{
 		Arc,
 	},
 };
-use wasmtime::{AsContext, Engine, Memory, Table};
-
-#[derive(Default)]
-pub(crate) struct StoreData {
-	/// This will only be set when we call into the runtime.
-	pub(crate) host_state: Option<HostState>,
-	/// This will be always set once the store is initialized.
-	pub(crate) memory: Option<Memory>,
-	/// This will be set only if the runtime actually contains a table.
-	pub(crate) table: Option<Table>,
-}
-
-impl StoreData {
-	/// Returns a mutable reference to the host state.
-	pub fn host_state_mut(&mut self) -> Option<&mut HostState> {
-		self.host_state.as_mut()
-	}
-
-	/// Returns the host memory.
-	pub fn memory(&self) -> Memory {
-		self.memory.expect("memory is always set; qed")
-	}
-}
+use wasmtime::{AsContext, Engine};
 
 pub(crate) type Store = wasmtime::Store<StoreData>;
 
