@@ -35,6 +35,7 @@ use sc_executor_common::{
 };
 use sp_runtime_interface::unpack_ptr_and_len;
 use sp_wasm_interface::{HostFunctions, Pointer, Value, WordSize};
+pub use sp_wasm_interface::StoreData;
 use std::{
 	path::{Path, PathBuf},
 	sync::{
@@ -43,30 +44,6 @@ use std::{
 	},
 };
 use wasmtime::{AsContext, Engine, Memory, StoreLimits, Table};
-
-pub(crate) struct StoreData {
-	/// The limits we apply to the store. We need to store it here to return a reference to this
-	/// object when we have the limits enabled.
-	pub(crate) limits: StoreLimits,
-	/// This will only be set when we call into the runtime.
-	pub(crate) host_state: Option<HostState>,
-	/// This will be always set once the store is initialized.
-	pub(crate) memory: Option<Memory>,
-	/// This will be set only if the runtime actually contains a table.
-	pub(crate) table: Option<Table>,
-}
-
-impl StoreData {
-	/// Returns a mutable reference to the host state.
-	pub fn host_state_mut(&mut self) -> Option<&mut HostState> {
-		self.host_state.as_mut()
-	}
-
-	/// Returns the host memory.
-	pub fn memory(&self) -> Memory {
-		self.memory.expect("memory is always set; qed")
-	}
-}
 
 pub(crate) type Store = wasmtime::Store<StoreData>;
 
