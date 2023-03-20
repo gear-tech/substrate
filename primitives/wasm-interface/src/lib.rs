@@ -33,6 +33,9 @@ if_wasmtime_is_enabled! {
 }
 
 #[cfg(not(all(feature = "std", feature = "wasmtime")))]
+pub struct StoreData;
+
+#[cfg(not(all(feature = "std", feature = "wasmtime")))]
 #[macro_export]
 macro_rules! if_wasmtime_is_enabled {
 	($($token:tt)*) => {};
@@ -106,6 +109,12 @@ impl PartialEq for dyn Function {
 	}
 }
 
+#[cfg(not(all(feature = "std", feature = "wasmtime")))]
+pub struct Caller<'a, T>(PhantomData<&'a T>);
+
+#[cfg(all(feature = "std", feature = "wasmtime"))]
+pub use wasmtime::Caller;
+
 /// Context used by `Function` to interact with the allocator and the memory of the wasm instance.
 pub trait FunctionContext {
 	/// Read memory from `address` into a vector.
@@ -144,6 +153,8 @@ pub trait FunctionContext {
 	/// It should only be called once, however calling it more than once
 	/// is harmless and will overwrite the previously set error message.
 	fn register_panic_error_message(&mut self, message: &str);
+
+    fn with_caller_mut(&mut self, context: *mut (), callback: fn(*mut (), &mut Caller<StoreData>));
 }
 
 if_wasmtime_is_enabled! {
