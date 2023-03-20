@@ -27,6 +27,11 @@ if_wasmtime_is_enabled! {
     pub use host_state::HostState;
 }
 
+if_wasmtime_is_enabled! {
+    mod store_data;
+    pub use store_data::StoreData;
+}
+
 #[cfg(not(all(feature = "std", feature = "wasmtime")))]
 #[macro_export]
 macro_rules! if_wasmtime_is_enabled {
