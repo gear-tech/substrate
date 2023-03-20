@@ -10730,6 +10730,7 @@ dependencies = [
  "impl-trait-for-tuples",
  "log",
  "parity-scale-codec",
+ "sp-allocator",
  "sp-std",
  "sp-wasm-interface-common",
  "wasmtime",
