@@ -22,6 +22,11 @@
 use sp_std::{borrow::Cow, iter::Iterator, marker::PhantomData, result, vec, vec::Vec};
 pub use sp_wasm_interface_common::{Value, ValueType, Pointer, PointerType, IntoValue, TryFromValue, ReturnValue, WordSize, MemoryId, HostPointer};
 
+if_wasmtime_is_enabled! {
+    mod host_state;
+    pub use host_state::HostState;
+}
+
 #[cfg(feature = "wasmi")]
 pub mod wasmi_impl;
 
