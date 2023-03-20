@@ -35,7 +35,7 @@ use sc_executor_common::{
 	wasm_runtime::{InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
-use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, WordSize, wasmi_impl};
+use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, WordSize, wasmi_impl, Caller, StoreData};
 
 struct FunctionExecutor {
 	heap: RefCell<sp_allocator::FreeingBumpHeapAllocator>,
@@ -89,6 +89,9 @@ impl FunctionContext for FunctionExecutor {
 	fn register_panic_error_message(&mut self, message: &str) {
 		self.panic_message = Some(message.to_owned());
 	}
+
+    fn with_caller_mut(&mut self, _context: *mut (), _callback: fn(*mut (), &mut Caller<StoreData>)) {
+    }
 }
 
 /// Will be used on initialization of a module to resolve function and memory imports.
