@@ -21,41 +21,10 @@
 
 use wasmtime::Caller;
 
-use sp_allocator::{AllocationStats, FreeingBumpHeapAllocator};
 use sp_wasm_interface::{Pointer, WordSize};
+pub use sp_wasm_interface::HostState;
 
 use crate::{instance_wrapper::MemoryWrapper, runtime::StoreData, util};
-
-/// The state required to construct a HostContext context. The context only lasts for one host
-/// call, whereas the state is maintained for the duration of a Wasm runtime call, which may make
-/// many different host calls that must share state.
-pub struct HostState {
-	/// The allocator instance to keep track of allocated memory.
-	///
-	/// This is stored as an `Option` as we need to temporarly set this to `None` when we are
-	/// allocating/deallocating memory. The problem being that we can only mutable access `caller`
-	/// once.
-	allocator: Option<FreeingBumpHeapAllocator>,
-	panic_message: Option<String>,
-}
-
-impl HostState {
-	/// Constructs a new `HostState`.
-	pub fn new(allocator: FreeingBumpHeapAllocator) -> Self {
-		HostState { allocator: Some(allocator), panic_message: None }
-	}
-
-	/// Takes the error message out of the host state, leaving a `None` in its place.
-	pub fn take_panic_message(&mut self) -> Option<String> {
-		self.panic_message.take()
-	}
-
-	pub(crate) fn allocation_stats(&self) -> AllocationStats {
-		self.allocator.as_ref()
-			.expect("Allocator is always set and only unavailable when doing an allocation/deallocation; qed")
-			.stats()
-	}
-}
 
 /// A `HostContext` implements `FunctionContext` for making host calls from a Wasmtime
 /// runtime. The `HostContext` exists only for the lifetime of the call and borrows state from

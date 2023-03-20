@@ -22,6 +22,11 @@
 use sp_std::{iter::Iterator, marker::PhantomData, result, vec, vec::Vec};
 pub use sp_wasm_interface_common::{self as common, Value, ValueType, Pointer, PointerType, IntoValue, TryFromValue, ReturnValue, WordSize, MemoryId, HostPointer, Signature};
 
+if_wasmtime_is_enabled! {
+    mod host_state;
+    pub use host_state::HostState;
+}
+
 #[cfg(not(all(feature = "std", feature = "wasmtime")))]
 #[macro_export]
 macro_rules! if_wasmtime_is_enabled {
