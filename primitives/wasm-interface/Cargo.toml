@@ -21,9 +21,10 @@ wasmtime = { version = "6.0.1", default-features = false, optional = true }
 anyhow = { version = "1.0.68", optional = true }
 sp-std = { version = "5.0.0", default-features = false, path = "../std" }
 sp-wasm-interface-common = { version = "7.0.0", path = "../wasm-interface-common", default-features = false }
+sp-allocator = { version = "4.1.0-dev", path = "../allocator", default-features = false }
 
 [features]
 default = [ "std" ]
-std = [ "codec/std", "log", "sp-std/std", "sp-wasm-interface-common/std", "wasmtime" ]
+std = [ "codec/std", "log", "sp-allocator/std", "sp-std/std", "sp-wasm-interface-common/std", "wasmtime" ]
 wasmtime = [ "dep:wasmtime", "anyhow" ]
 wasmi = [ "sp-wasm-interface-common/wasmi" ]
