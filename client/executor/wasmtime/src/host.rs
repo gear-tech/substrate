@@ -94,4 +94,8 @@ impl<'a> sp_wasm_interface::FunctionContext for HostContext<'a> {
 	fn register_panic_error_message(&mut self, message: &str) {
 		self.host_state_mut().panic_message = Some(message.to_owned());
 	}
+
+    fn with_caller_mut(&mut self, context: *mut (), callback: fn(*mut (), &mut Caller<StoreData>)) {
+        callback(context, &mut self.caller)
+    }
 }
