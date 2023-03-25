@@ -38,6 +38,41 @@ use crate::{
 	util::{checked_range, MemoryTransfer},
 };
 
+use wasmer::{Global, LazyInit, WasmerEnv, Instance, HostEnvInitError};
+
+#[derive(Clone)]
+pub struct MyEnv {
+   gas: LazyInit<Global>,
+   allowance: LazyInit<Global>,
+}
+
+impl MyEnv {
+  fn new() -> Self {
+    Self {
+		gas: LazyInit::new(),
+		allowance: LazyInit::new(),
+    }
+  }
+}
+
+impl WasmerEnv for MyEnv {
+    fn init_with_instance(&mut self, instance: &Instance) -> std::result::Result<(), HostEnvInitError> {
+		log::trace!("init_with_instance");
+
+        let gas: Global = instance.exports.get_with_generics_weak("gear_gas").unwrap();
+        self.gas.initialize(gas.clone());
+
+		log::trace!("init_with_instance; gas initialized");
+
+        let allowance: Global = instance.exports.get_with_generics_weak("gear_allowance").unwrap();
+        self.allowance.initialize(allowance.clone());
+
+		log::trace!("init_with_instance; allowance initialized");
+
+        Ok(())
+    }
+}
+
 environmental::environmental!(SandboxContextStore: trait SandboxContext);
 
 /// Wasmer specific context
@@ -223,7 +258,8 @@ pub fn instantiate(
 					.func_by_guest_index(guest_func_index)
 					.ok_or(InstantiationError::ModuleDecoding)?;
 
-				let function = dispatch_function(supervisor_func_index, &context.store, &func_ty);
+				let env = MyEnv::new();
+				let function = dispatch_function(supervisor_func_index, &context.store, &func_ty, env);
 
 				let exports = exports_map
 					.entry(import.module().to_string())
@@ -260,12 +296,19 @@ fn dispatch_function(
 	supervisor_func_index: SupervisorFuncIndex,
 	store: &wasmer::Store,
 	func_ty: &wasmer::FunctionType,
+	env: MyEnv,
 ) -> wasmer::Function {
-	wasmer::Function::new(store, func_ty, move |params| {
+	wasmer::Function::new_with_env(store, func_ty, env, move |env, params| {
 		SandboxContextStore::with(|sandbox_context| {
+			log::trace!("syscall in wasmer");
+
+			let gas = env.gas.get_ref().expect("gas global should exist");
+			let allowance = env.allowance.get_ref().expect("allowance global should exist");
+
 			// Serialize arguments into a byte vector.
 			let invoke_args_data = params
 				.iter()
+				.chain([&gas.get(), &allowance.get()])
 				.map(|val| match val {
 					wasmer::Val::I32(val) => Ok(Value::I32(*val)),
 					wasmer::Val::I64(val) => Ok(Value::I64(*val)),
