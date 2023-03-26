@@ -298,17 +298,17 @@ fn dispatch_function(
 	func_ty: &wasmer::FunctionType,
 	env: MyEnv,
 ) -> wasmer::Function {
-	wasmer::Function::new_with_env(store, func_ty, env, move |env, params| {
+	wasmer::Function::new_with_env(store, func_ty, env, move |_env, params| {
 		SandboxContextStore::with(|sandbox_context| {
-			log::trace!("syscall in wasmer");
+			// log::trace!("syscall in wasmer");
 
-			let gas = env.gas.get_ref().expect("gas global should exist");
-			let allowance = env.allowance.get_ref().expect("allowance global should exist");
+			// let gas = env.gas.get_ref().expect("gas global should exist");
+			// let allowance = env.allowance.get_ref().expect("allowance global should exist");
 
 			// Serialize arguments into a byte vector.
 			let invoke_args_data = params
 				.iter()
-				.chain([&gas.get(), &allowance.get()])
+				// .chain([&gas.get(), &allowance.get()])
 				.map(|val| match val {
 					wasmer::Val::I32(val) => Ok(Value::I32(*val)),
 					wasmer::Val::I64(val) => Ok(Value::I64(*val)),
