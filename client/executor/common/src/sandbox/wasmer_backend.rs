@@ -38,24 +38,27 @@ use crate::{
 	util::{checked_range, MemoryTransfer},
 };
 
-use wasmer::{WasmerEnv, Instance, HostEnvInitError};
+use wasmer::{Global, WasmerEnv, Instance, HostEnvInitError};
 
 #[derive(Clone)]
 pub struct MyEnv {
-   gas: i32,
+   x: i32,
+   gas: Option<Global>,
 }
 
 impl MyEnv {
   fn new() -> Self {
     Self {
-		gas: 0,
+        x: 0,
+		gas: None,
     }
   }
 }
 
 impl WasmerEnv for MyEnv {
-    fn init_with_instance(&mut self, _instance: &Instance) -> std::result::Result<(), HostEnvInitError> {
-		self.gas = 100;
+    fn init_with_instance(&mut self, instance: &Instance) -> std::result::Result<(), HostEnvInitError> {
+        self.x = 100;
+		self.gas = Some(instance.exports.get_with_generics_weak("gear_gas")?);
 
         Ok(())
     }
