@@ -42,23 +42,23 @@ use wasmer::{Global, WasmerEnv, Instance, HostEnvInitError};
 
 #[derive(Clone)]
 pub struct MyEnv {
-   x: i32,
    gas: Option<Global>,
+   allowance: Option<Global>,
 }
 
 impl MyEnv {
   fn new() -> Self {
     Self {
-        x: 0,
-		gas: None,
+        gas: None,
+		allowance: None,
     }
   }
 }
 
 impl WasmerEnv for MyEnv {
     fn init_with_instance(&mut self, instance: &Instance) -> std::result::Result<(), HostEnvInitError> {
-        self.x = 100;
-		self.gas = Some(instance.exports.get_with_generics_weak("gear_gas")?);
+        self.gas = Some(instance.exports.get_with_generics_weak("gear_gas")?);
+        self.allowance = Some(instance.exports.get_with_generics_weak("gear_allowance")?);
 
         Ok(())
     }
@@ -249,8 +249,7 @@ pub fn instantiate(
 					.func_by_guest_index(guest_func_index)
 					.ok_or(InstantiationError::ModuleDecoding)?;
 
-				let env = MyEnv::new();
-				let function = dispatch_function(supervisor_func_index, &context.store, &func_ty, env);
+				let function = dispatch_function(supervisor_func_index, &context.store, &func_ty);
 
 				let exports = exports_map
 					.entry(import.module().to_string())
@@ -287,20 +286,18 @@ fn dispatch_function(
 	supervisor_func_index: SupervisorFuncIndex,
 	store: &wasmer::Store,
 	func_ty: &wasmer::FunctionType,
-	env: MyEnv,
 ) -> wasmer::Function {
-	wasmer::Function::new_with_env(store, func_ty, env, move |env, params| {
+	wasmer::Function::new_with_env(store, func_ty, MyEnv::new(), move |env, params| {
 		SandboxContextStore::with(|sandbox_context| {
-			// log::trace!("syscall in wasmer");
+			log::trace!("syscall in wasmer");
 
 			let gas = env.gas.as_ref().expect("gas global should exist");
-			// let allowance = env.allowance.get_ref().expect("allowance global should exist");
+			let allowance = env.allowance.as_ref().expect("allowance global should exist");
 
 			// Serialize arguments into a byte vector.
 			let invoke_args_data = params
 				.iter()
-				.chain([&gas.get()])
-				// .chain([&gas.get(), &allowance.get()])
+				.chain([&gas.get(), &allowance.get()])
 				.map(|val| match val {
 					wasmer::Val::I32(val) => Ok(Value::I32(*val)),
 					wasmer::Val::I64(val) => Ok(Value::I64(*val)),
