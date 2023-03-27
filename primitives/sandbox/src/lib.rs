@@ -49,7 +49,7 @@ use sp_core::RuntimeDebug;
 use sp_std::prelude::*;
 
 use sp_wasm_interface::HostPointer;
-pub use sp_wasm_interface::{ReturnValue, Value};
+pub use sp_wasm_interface::{ReturnValue, Value, WasmReturnValue};
 
 #[cfg(not(all(feature = "host-sandbox", not(feature = "std"))))]
 pub use self::embedded_executor as default_executor;
@@ -88,7 +88,7 @@ impl From<Error> for HostError {
 /// supervisor in [`EnvironmentDefinitionBuilder`].
 ///
 /// [`EnvironmentDefinitionBuilder`]: struct.EnvironmentDefinitionBuilder.html
-pub type HostFuncType<T> = fn(&mut T, &[Value]) -> Result<ReturnValue, HostError>;
+pub type HostFuncType<T> = fn(&mut T, &[Value]) -> Result<WasmReturnValue, HostError>;
 
 /// Reference to a sandboxed linear memory, that
 /// will be used by the guest module.

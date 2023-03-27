@@ -125,7 +125,7 @@ impl<'a, T> Externals for GuestExternals<'a, T> {
 
 		let result = (self.defined_host_functions.funcs[index])(self.state, &args);
 		match result {
-			Ok(value) => Ok(match value {
+			Ok(value) => Ok(match value.value {
 				ReturnValue::Value(v) => Some(to_wasmi(v)),
 				ReturnValue::Unit => None,
 			}),
@@ -344,7 +344,7 @@ fn to_interface(value: RuntimeValue) -> Value {
 #[cfg(test)]
 mod tests {
 	use super::{EnvironmentDefinitionBuilder, Instance};
-	use crate::{Error, HostError, ReturnValue, SandboxEnvironmentBuilder, SandboxInstance, Value};
+	use crate::{Error, HostError, ReturnValue, SandboxEnvironmentBuilder, SandboxInstance, Value, WasmReturnValue};
 	use assert_matches::assert_matches;
 
 	fn execute_sandboxed(code: &[u8], args: &[Value]) -> Result<ReturnValue, HostError> {
@@ -352,31 +352,31 @@ mod tests {
 			counter: u32,
 		}
 
-		fn env_assert(_e: &mut State, args: &[Value]) -> Result<ReturnValue, HostError> {
+		fn env_assert(_e: &mut State, args: &[Value]) -> Result<WasmReturnValue, HostError> {
 			if args.len() != 1 {
 				return Err(HostError)
 			}
 			let condition = args[0].as_i32().ok_or_else(|| HostError)?;
 			if condition != 0 {
-				Ok(ReturnValue::Unit)
+				Ok(WasmReturnValue { gas: 0, allowance: 0, value: ReturnValue::Unit })
 			} else {
 				Err(HostError)
 			}
 		}
-		fn env_inc_counter(e: &mut State, args: &[Value]) -> Result<ReturnValue, HostError> {
+		fn env_inc_counter(e: &mut State, args: &[Value]) -> Result<WasmReturnValue, HostError> {
 			if args.len() != 1 {
 				return Err(HostError)
 			}
 			let inc_by = args[0].as_i32().ok_or_else(|| HostError)?;
 			e.counter += inc_by as u32;
-			Ok(ReturnValue::Value(Value::I32(e.counter as i32)))
+			Ok(WasmReturnValue { gas: 0, allowance: 0, value: ReturnValue::Value(Value::I32(e.counter as i32)) })
 		}
 		/// Function that takes one argument of any type and returns that value.
-		fn env_polymorphic_id(_e: &mut State, args: &[Value]) -> Result<ReturnValue, HostError> {
+		fn env_polymorphic_id(_e: &mut State, args: &[Value]) -> Result<WasmReturnValue, HostError> {
 			if args.len() != 1 {
 				return Err(HostError)
 			}
-			Ok(ReturnValue::Value(args[0]))
+			Ok(WasmReturnValue { gas: 0, allowance: 0, value: ReturnValue::Value(args[0]) })
 		}
 
 		let mut state = State { counter: 0 };
@@ -485,8 +485,8 @@ mod tests {
 
 	#[test]
 	fn cant_return_unmatching_type() {
-		fn env_returns_i32(_e: &mut (), _args: &[Value]) -> Result<ReturnValue, HostError> {
-			Ok(ReturnValue::Value(Value::I32(42)))
+		fn env_returns_i32(_e: &mut (), _args: &[Value]) -> Result<WasmReturnValue, HostError> {
+			Ok(WasmReturnValue { gas: 0, allowance: 0, value: ReturnValue::Value(Value::I32(42)) })
 		}
 
 		let mut env_builder = EnvironmentDefinitionBuilder::new();

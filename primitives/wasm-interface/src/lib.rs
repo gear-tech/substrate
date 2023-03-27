@@ -677,6 +677,15 @@ impl ReturnValue {
 	pub const ENCODED_MAX_SIZE: usize = 10;
 }
 
+/// Typed value that can be returned from a wasm function
+/// through the dispatch thunk.
+#[derive(Clone, Copy, PartialEq, codec::Encode, codec::Decode, Debug)]
+pub struct WasmReturnValue {
+	pub gas: i64,
+	pub allowance: i64,
+	pub value: ReturnValue,
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;

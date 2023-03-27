@@ -27,7 +27,7 @@ use wasmer::Module;
 
 use codec::{Decode, Encode};
 use sp_sandbox::HostError;
-use sp_wasm_interface::{FunctionContext, Pointer, ReturnValue, Value, WordSize};
+use sp_wasm_interface::{FunctionContext, Pointer, ReturnValue, WasmReturnValue, Value, WordSize};
 
 use crate::{
 	error::{Error, Result},
@@ -373,13 +373,13 @@ fn dispatch_function(
 
 			let serialized_result_val = serialized_result_val?;
 
-			let deserialized_result = std::result::Result::<ReturnValue, HostError>::decode(
+			let deserialized_result = std::result::Result::<WasmReturnValue, HostError>::decode(
 				&mut serialized_result_val.as_slice(),
 			)
 			.map_err(|_| RuntimeError::new("Decoding Result<ReturnValue, HostError> failed!"))?
 			.map_err(|_| RuntimeError::new("Supervisor function returned sandbox::HostError"))?;
 
-			let result = match deserialized_result {
+			let result = match deserialized_result.value {
 				ReturnValue::Value(Value::I32(val)) => vec![wasmer::Val::I32(val)],
 				ReturnValue::Value(Value::I64(val)) => vec![wasmer::Val::I64(val)],
 				ReturnValue::Value(Value::F32(val)) => vec![wasmer::Val::F32(f32::from_bits(val))],
@@ -387,6 +387,9 @@ fn dispatch_function(
 
 				ReturnValue::Unit => vec![],
 			};
+
+			gas.set(wasmer::Val::I64(deserialized_result.gas));
+			allowance.set(wasmer::Val::I64(deserialized_result.allowance));
 
 			Ok(result)
 		})
