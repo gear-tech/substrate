@@ -28,7 +28,7 @@ use wasmi::{
 	TableRef,
 };
 
-use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
+use sc_allocator::AllocationStats;
 use sc_executor_common::{
 	error::{Error, MessageWithBacktrace, WasmError},
 	runtime_blob::{DataSegmentsSnapshot, RuntimeBlob},
@@ -41,6 +41,7 @@ use sp_sandbox::env as sandbox_env;
 use sp_wasm_interface::{
 	Function, FunctionContext, MemoryId, Pointer, Result as WResult, Sandbox, WordSize, HostPointer,
 };
+use codec::{Decode, Encode};
 
 /// Wrapper around [`MemorRef`] that implements [`sc_allocator::Memory`].
 struct MemoryWrapper<'a>(&'a MemoryRef);
