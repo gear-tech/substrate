@@ -32,6 +32,12 @@ if_wasmtime_is_enabled! {
     pub use store_data::StoreData;
 }
 
+#[cfg(feature = "wasmi")]
+mod memory_wrapper;
+
+#[cfg(feature = "wasmi")]
+pub use memory_wrapper::MemoryWrapper;
+
 #[cfg(not(all(feature = "std", feature = "wasmtime")))]
 pub struct StoreData;
 

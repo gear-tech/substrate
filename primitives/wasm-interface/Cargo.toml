@@ -25,6 +25,6 @@ sp-allocator = { version = "4.1.0-dev", path = "../allocator", default-features 
 
 [features]
 default = [ "std" ]
-std = [ "codec/std", "log", "sp-allocator/std", "sp-std/std", "sp-wasm-interface-common/std", "wasmtime" ]
+std = [ "codec/std", "log", "sp-allocator/std", "sp-std/std", "sp-wasm-interface-common/std", "wasmi", "wasmtime" ]
 wasmtime = [ "dep:wasmtime", "anyhow" ]
 wasmi = [ "sp-wasm-interface-common/wasmi" ]

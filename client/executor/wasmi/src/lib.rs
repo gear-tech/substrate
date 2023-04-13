@@ -22,7 +22,6 @@ use std::{cell::RefCell, str, sync::Arc};
 
 use log::{error, trace};
 use wasmi::{
-	memory_units::Pages,
 	FuncInstance, ImportsBuilder, MemoryRef, Module, ModuleInstance, ModuleRef,
 	RuntimeValue::{self, I32, I64},
 	TableRef,
@@ -35,42 +34,7 @@ use sc_executor_common::{
 	wasm_runtime::{HeapAllocStrategy, InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
-use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, WordSize, Caller, StoreData};
-
-/// Wrapper around [`MemorRef`] that implements [`sc_allocator::Memory`].
-struct MemoryWrapper<'a>(&'a MemoryRef);
-
-impl sp_allocator::Memory for MemoryWrapper<'_> {
-	fn with_access_mut<R>(&mut self, run: impl FnOnce(&mut [u8]) -> R) -> R {
-		self.0.with_direct_access_mut(run)
-	}
-
-	fn with_access<R>(&self, run: impl FnOnce(&[u8]) -> R) -> R {
-		self.0.with_direct_access(run)
-	}
-
-	fn pages(&self) -> u32 {
-		self.0.current_size().0 as _
-	}
-
-	fn max_pages(&self) -> Option<u32> {
-		self.0.maximum().map(|p| p.0 as _)
-	}
-
-	fn grow(&mut self, additional: u32) -> Result<(), ()> {
-		self.0
-			.grow(Pages(additional as _))
-			.map_err(|e| {
-				log::error!(
-					target: "wasm-executor",
-					"Failed to grow memory by {} pages: {}",
-					additional,
-					e,
-				)
-			})
-			.map(drop)
-	}
-}
+use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, WordSize, Caller, StoreData, MemoryWrapper};
 
 struct FunctionExecutor {
 	heap: RefCell<sp_allocator::FreeingBumpHeapAllocator>,
@@ -112,14 +76,14 @@ impl FunctionContext for FunctionExecutor {
 	fn allocate_memory(&mut self, size: WordSize) -> WResult<Pointer<u8>> {
 		self.heap
 			.borrow_mut()
-			.allocate(&mut MemoryWrapper(&self.memory), size)
+			.allocate(&mut MemoryWrapper::from(&self.memory), size)
 			.map_err(|e| e.to_string())
 	}
 
 	fn deallocate_memory(&mut self, ptr: Pointer<u8>) -> WResult<()> {
 		self.heap
 			.borrow_mut()
-			.deallocate(&mut MemoryWrapper(&self.memory), ptr)
+			.deallocate(&mut MemoryWrapper::from(&self.memory), ptr)
 			.map_err(|e| e.to_string())
 	}
 
