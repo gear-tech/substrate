@@ -28,7 +28,7 @@ use wasmi::{
 	TableRef,
 };
 
-use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
+use sp_allocator::AllocationStats;
 use sc_executor_common::{
 	error::{Error, MessageWithBacktrace, WasmError},
 	runtime_blob::{DataSegmentsSnapshot, RuntimeBlob},
@@ -40,7 +40,7 @@ use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, W
 /// Wrapper around [`MemorRef`] that implements [`sc_allocator::Memory`].
 struct MemoryWrapper<'a>(&'a MemoryRef);
 
-impl sc_allocator::Memory for MemoryWrapper<'_> {
+impl sp_allocator::Memory for MemoryWrapper<'_> {
 	fn with_access_mut<R>(&mut self, run: impl FnOnce(&mut [u8]) -> R) -> R {
 		self.0.with_direct_access_mut(run)
 	}
@@ -73,7 +73,7 @@ impl sc_allocator::Memory for MemoryWrapper<'_> {
 }
 
 struct FunctionExecutor {
-	heap: RefCell<sc_allocator::FreeingBumpHeapAllocator>,
+	heap: RefCell<sp_allocator::FreeingBumpHeapAllocator>,
 	memory: MemoryRef,
 	host_functions: Arc<Vec<&'static dyn Function>>,
 	allow_missing_func_imports: bool,
@@ -90,7 +90,7 @@ impl FunctionExecutor {
 		missing_functions: Arc<Vec<String>>,
 	) -> Result<Self, Error> {
 		Ok(FunctionExecutor {
-			heap: RefCell::new(FreeingBumpHeapAllocator::new(heap_base)),
+			heap: RefCell::new(sp_allocator::FreeingBumpHeapAllocator::new(heap_base)),
 			memory: m,
 			host_functions,
 			allow_missing_func_imports,
