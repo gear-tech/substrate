@@ -15,9 +15,9 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.2.2", default-features = false, features = ["derive"] }
-wasmi = { version = "0.13.2", default-features = false, optional = true }
+wasmi = { git = "https://github.com/gear-tech/wasmi", branch = "v0.13.2-sign-ext", default-features = false, optional = true }
 sp-std = { version = "5.0.0", default-features = false, path = "../std" }
 
 [features]
 default = [ "std" ]
-std = [ "codec/std", "sp-std/std", "wasmi/std" ]
+std = [ "codec/std", "sp-std/std", "wasmi/virtual_memory" ]
