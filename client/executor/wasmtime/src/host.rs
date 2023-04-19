@@ -21,10 +21,10 @@
 
 use wasmtime::Caller;
 
-use sp_wasm_interface::{Pointer, WordSize};
+use sp_wasm_interface::{Pointer, WordSize, MemoryWrapper};
 pub use sp_wasm_interface::HostState;
 
-use crate::{instance_wrapper::MemoryWrapper, runtime::StoreData, util};
+use crate::{runtime::StoreData, util};
 
 /// A `HostContext` implements `FunctionContext` for making host calls from a Wasmtime
 /// runtime. The `HostContext` exists only for the lifetime of the call and borrows state from
@@ -65,7 +65,7 @@ impl<'a> sp_wasm_interface::FunctionContext for HostContext<'a> {
 
 		// We can not return on error early, as we need to store back allocator.
 		let res = allocator
-			.allocate(&mut MemoryWrapper(&memory, &mut self.caller), size)
+			.allocate(&mut MemoryWrapper::from((&memory, &mut self.caller)), size)
 			.map_err(|e| e.to_string());
 
 		self.host_state_mut().allocator = Some(allocator);
@@ -83,7 +83,7 @@ impl<'a> sp_wasm_interface::FunctionContext for HostContext<'a> {
 
 		// We can not return on error early, as we need to store back allocator.
 		let res = allocator
-			.deallocate(&mut MemoryWrapper(&memory, &mut self.caller), ptr)
+			.deallocate(&mut MemoryWrapper::from((&memory, &mut self.caller)), ptr)
 			.map_err(|e| e.to_string());
 
 		self.host_state_mut().allocator = Some(allocator);

@@ -112,41 +112,6 @@ impl EntryPoint {
 	}
 }
 
-/// Wrapper around [`Memory`] that implements [`sp_allocator::Memory`].
-pub(crate) struct MemoryWrapper<'a, C>(pub &'a wasmtime::Memory, pub &'a mut C);
-
-impl<C: AsContextMut> sp_allocator::Memory for MemoryWrapper<'_, C> {
-	fn with_access<R>(&self, run: impl FnOnce(&[u8]) -> R) -> R {
-		run(self.0.data(&self.1))
-	}
-
-	fn with_access_mut<R>(&mut self, run: impl FnOnce(&mut [u8]) -> R) -> R {
-		run(self.0.data_mut(&mut self.1))
-	}
-
-	fn grow(&mut self, additional: u32) -> std::result::Result<(), ()> {
-		self.0
-			.grow(&mut self.1, additional as u64)
-			.map_err(|e| {
-				log::error!(
-					target: "wasm-executor",
-					"Failed to grow memory by {} pages: {}",
-					additional,
-					e,
-				)
-			})
-			.map(drop)
-	}
-
-	fn pages(&self) -> u32 {
-		self.0.size(&self.1) as u32
-	}
-
-	fn max_pages(&self) -> Option<u32> {
-		self.0.ty(&self.1).maximum().map(|p| p as _)
-	}
-}
-
 /// Wrap the given WebAssembly Instance of a wasm module with Substrate-runtime.
 ///
 /// This struct is a handy wrapper around a wasmtime `Instance` that provides substrate specific
