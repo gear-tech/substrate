@@ -20,7 +20,7 @@
 
 use crate::{
 	host::HostState,
-	instance_wrapper::{EntryPoint, InstanceWrapper, MemoryWrapper},
+	instance_wrapper::{EntryPoint, InstanceWrapper},
 	util::{self, replace_strategy_if_broken},
 };
 
@@ -34,7 +34,7 @@ use sc_executor_common::{
 	wasm_runtime::{HeapAllocStrategy, InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
-use sp_wasm_interface::{HostFunctions, Pointer, Value, WordSize};
+use sp_wasm_interface::{HostFunctions, Pointer, Value, WordSize, MemoryWrapper};
 pub use sp_wasm_interface::StoreData;
 use std::{
 	path::{Path, PathBuf},
@@ -736,7 +736,7 @@ fn inject_input_data(
 	let mut ctx = instance.store_mut();
 	let memory = ctx.data().memory();
 	let data_len = data.len() as WordSize;
-	let data_ptr = allocator.allocate(&mut MemoryWrapper(&memory, &mut ctx), data_len)?;
+	let data_ptr = allocator.allocate(&mut MemoryWrapper::from((&memory, &mut ctx)), data_len)?;
 	util::write_memory_from(instance.store_mut(), data_ptr, data)?;
 	Ok((data_ptr, data_len))
 }

@@ -25,11 +25,12 @@ pub use sp_wasm_interface_common::{self as common, Value, ValueType, Pointer, Po
 if_wasmtime_is_enabled! {
     mod host_state;
     pub use host_state::HostState;
-}
 
-if_wasmtime_is_enabled! {
     mod store_data;
     pub use store_data::StoreData;
+
+    mod memory_wrapper;
+    pub use memory_wrapper::MemoryWrapper;
 }
 
 #[cfg(not(all(feature = "std", feature = "wasmtime")))]
