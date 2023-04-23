@@ -21,6 +21,9 @@ log = "0.4"
 wasm-instrument = "0.3"
 wasmer = { version = "2.2", features = ["singlepass"], optional = true }
 wasmi = { git = "https://github.com/gear-tech/wasmi", branch = "v0.13.2-sign-ext", features = ["virtual_memory"] }
+tempfile = "3"
+once_cell = "1"
+
 sc-allocator = { version = "4.1.0-dev", path = "../../allocator" }
 sp-maybe-compressed-blob = { version = "4.1.0-dev", path = "../../../primitives/maybe-compressed-blob" }
 sp-sandbox = { version = "0.10.0-dev", path = "../../../primitives/sandbox" }
