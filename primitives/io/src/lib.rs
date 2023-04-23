@@ -19,7 +19,6 @@
 
 #![warn(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(not(feature = "std"), feature(alloc_error_handler))]
 #![cfg_attr(
 	feature = "std",
 	doc = "Substrate runtime standard library as compiled when linked with Rust's standard library."
