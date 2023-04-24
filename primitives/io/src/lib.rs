@@ -1651,21 +1651,6 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
 	}
 }
 
-/// A default OOM handler for WASM environment.
-#[cfg(all(not(feature = "disable_oom"), not(feature = "std")))]
-#[alloc_error_handler]
-pub fn oom(_: core::alloc::Layout) -> ! {
-	#[cfg(feature = "improved_panic_error_reporting")]
-	{
-		panic_handler::abort_on_panic("Runtime memory exhausted.");
-	}
-	#[cfg(not(feature = "improved_panic_error_reporting"))]
-	{
-		logging::log(LogLevel::Error, "runtime", b"Runtime memory exhausted. Aborting");
-		core::arch::wasm32::unreachable();
-	}
-}
-
 /// Type alias for Externalities implementation used in tests.
 #[cfg(feature = "std")]
 pub type TestExternalities = sp_state_machine::TestExternalities<sp_core::Blake2Hasher>;
