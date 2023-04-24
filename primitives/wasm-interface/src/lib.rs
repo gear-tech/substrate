@@ -31,6 +31,8 @@ if_wasmtime_is_enabled! {
 
     mod memory_wrapper;
     pub use memory_wrapper::MemoryWrapper;
+
+    pub mod util;
 }
 
 #[cfg(not(all(feature = "std", feature = "wasmtime")))]
