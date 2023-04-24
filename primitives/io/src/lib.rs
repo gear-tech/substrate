@@ -1736,7 +1736,9 @@ pub trait Sandbox {
 	}
 
 	fn get_instance_ptr(&mut self, instance_id: u32) -> HostPointer {
-		self.sandbox().get_instance_ptr(instance_id).expect("Failed to get instance ptr")
+		self.sandbox()
+			.get_instance_ptr(instance_id)
+			.expect("Failed to get instance ptr")
 	}
 }
 
@@ -1777,21 +1779,6 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
 	#[cfg(not(feature = "improved_panic_error_reporting"))]
 	{
 		logging::log(LogLevel::Error, "runtime", message.as_bytes());
-		core::arch::wasm32::unreachable();
-	}
-}
-
-/// A default OOM handler for WASM environment.
-#[cfg(all(not(feature = "disable_oom"), not(feature = "std")))]
-#[alloc_error_handler]
-pub fn oom(_: core::alloc::Layout) -> ! {
-	#[cfg(feature = "improved_panic_error_reporting")]
-	{
-		panic_handler::abort_on_panic("Runtime memory exhausted.");
-	}
-	#[cfg(not(feature = "improved_panic_error_reporting"))]
-	{
-		logging::log(LogLevel::Error, "runtime", b"Runtime memory exhausted. Aborting");
 		core::arch::wasm32::unreachable();
 	}
 }
