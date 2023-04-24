@@ -21,25 +21,16 @@
 
 use wasmtime::Caller;
 
-use sp_wasm_interface::{Pointer, WordSize, MemoryWrapper};
+use sp_wasm_interface::{Pointer, WordSize, util};
 pub use sp_wasm_interface::HostState;
 
-use crate::{runtime::StoreData, util};
+use crate::runtime::StoreData;
 
 /// A `HostContext` implements `FunctionContext` for making host calls from a Wasmtime
 /// runtime. The `HostContext` exists only for the lifetime of the call and borrows state from
 /// a longer-living `HostState`.
 pub(crate) struct HostContext<'a> {
 	pub(crate) caller: Caller<'a, StoreData>,
-}
-
-impl<'a> HostContext<'a> {
-	fn host_state_mut(&mut self) -> &mut HostState {
-		self.caller
-			.data_mut()
-			.host_state_mut()
-			.expect("host state is not empty when calling a function in wasm; qed")
-	}
 }
 
 impl<'a> sp_wasm_interface::FunctionContext for HostContext<'a> {
@@ -56,43 +47,19 @@ impl<'a> sp_wasm_interface::FunctionContext for HostContext<'a> {
 	}
 
 	fn allocate_memory(&mut self, size: WordSize) -> sp_wasm_interface::Result<Pointer<u8>> {
-		let memory = self.caller.data().memory();
-		let mut allocator = self
-			.host_state_mut()
-			.allocator
-			.take()
-			.expect("allocator is not empty when calling a function in wasm; qed");
-
-		// We can not return on error early, as we need to store back allocator.
-		let res = allocator
-			.allocate(&mut MemoryWrapper::from((&memory, &mut self.caller)), size)
-			.map_err(|e| e.to_string());
-
-		self.host_state_mut().allocator = Some(allocator);
-
-		res
+		util::allocate_memory(&mut self.caller, size)
 	}
 
 	fn deallocate_memory(&mut self, ptr: Pointer<u8>) -> sp_wasm_interface::Result<()> {
-		let memory = self.caller.data().memory();
-		let mut allocator = self
-			.host_state_mut()
-			.allocator
-			.take()
-			.expect("allocator is not empty when calling a function in wasm; qed");
-
-		// We can not return on error early, as we need to store back allocator.
-		let res = allocator
-			.deallocate(&mut MemoryWrapper::from((&memory, &mut self.caller)), ptr)
-			.map_err(|e| e.to_string());
-
-		self.host_state_mut().allocator = Some(allocator);
-
-		res
+		util::deallocate_memory(&mut self.caller, ptr)
 	}
 
 	fn register_panic_error_message(&mut self, message: &str) {
-		self.host_state_mut().panic_message = Some(message.to_owned());
+		self.caller
+			.data_mut()
+			.host_state_mut()
+			.expect("host state is not empty when calling a function in wasm; qed")
+			.panic_message = Some(message.to_owned());
 	}
 
     fn with_caller_mut(&mut self, context: *mut (), callback: fn(*mut (), &mut Caller<StoreData>)) {
