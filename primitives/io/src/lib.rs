@@ -1771,13 +1771,27 @@ mod allocator_impl {
 #[panic_handler]
 #[no_mangle]
 pub fn panic(info: &core::panic::PanicInfo) -> ! {
-	let message = sp_std::alloc::format!("{}", info);
-	#[cfg(feature = "improved_panic_error_reporting")]
-	{
+	let improved_panic_error_reporting = match () {
+		#[cfg(feature = "improved_panic_error_reporting")]
+		() => true,
+		#[cfg(not(feature = "improved_panic_error_reporting"))]
+		() => false,
+	};
+
+	let message = info
+		.message()
+		.downcast_ref::<alloc::alloc::AllocErrorPanicPayload>()
+		.map(|_| {
+			let msg = improved_panic_error_reporting
+				.then_some("Runtime memory exhausted.")
+				.unwrap_or("Runtime memory exhausted. Aborting");
+			String::from(msg)
+		})
+		.unwrap_or_else(|| sp_std::alloc::format!("{info}"));
+
+	if improved_panic_error_reporting {
 		panic_handler::abort_on_panic(&message);
-	}
-	#[cfg(not(feature = "improved_panic_error_reporting"))]
-	{
+	} else {
 		logging::log(LogLevel::Error, "runtime", message.as_bytes());
 		core::arch::wasm32::unreachable();
 	}
