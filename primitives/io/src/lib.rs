@@ -20,6 +20,10 @@
 #![warn(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(
+	all(not(feature = "disable_panic_handler"), not(feature = "std")),
+	feature(panic_oom_payload)
+)]
+#![cfg_attr(
 	feature = "std",
 	doc = "Substrate runtime standard library as compiled when linked with Rust's standard library."
 )]
@@ -1639,13 +1643,29 @@ mod allocator_impl {
 #[panic_handler]
 #[no_mangle]
 pub fn panic(info: &core::panic::PanicInfo) -> ! {
-	let message = sp_std::alloc::format!("{}", info);
-	#[cfg(feature = "improved_panic_error_reporting")]
-	{
+	use sp_std::alloc::{alloc::AllocErrorPanicPayload, format, string::String};
+
+	let improved_panic_error_reporting = match () {
+		#[cfg(feature = "improved_panic_error_reporting")]
+		() => true,
+		#[cfg(not(feature = "improved_panic_error_reporting"))]
+		() => false,
+	};
+
+	let message = info
+		.payload()
+		.downcast_ref::<AllocErrorPanicPayload>()
+		.map(|_| {
+			let msg = improved_panic_error_reporting
+				.then_some("Runtime memory exhausted.")
+				.unwrap_or("Runtime memory exhausted. Aborting");
+			String::from(msg)
+		})
+		.unwrap_or_else(|| format!("{info}"));
+
+	if improved_panic_error_reporting {
 		panic_handler::abort_on_panic(&message);
-	}
-	#[cfg(not(feature = "improved_panic_error_reporting"))]
-	{
+	} else {
 		logging::log(LogLevel::Error, "runtime", message.as_bytes());
 		core::arch::wasm32::unreachable();
 	}
