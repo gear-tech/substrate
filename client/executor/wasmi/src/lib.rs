@@ -35,7 +35,7 @@ use sc_executor_common::{
 	wasm_runtime::{HeapAllocStrategy, InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
-use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, WordSize, Caller, StoreData};
+use sp_wasm_interface::{Function, FunctionContext, FunctionContextToken, Pointer, Result as WResult, WordSize, Caller, StoreData};
 
 /// Wrapper around [`MemorRef`] that implements [`sc_allocator::Memory`].
 struct MemoryWrapper<'a>(&'a MemoryRef);
@@ -127,7 +127,7 @@ impl FunctionContext for FunctionExecutor {
 		self.panic_message = Some(message.to_owned());
 	}
 
-    fn with_caller_mut(&mut self, _context: *mut (), _callback: fn(*mut (), &mut Caller<StoreData>)) {
+    fn with_caller_mut_impl(&mut self, _: FunctionContextToken, _context: *mut (), _callback: fn(*mut (), &mut Caller<StoreData>)) {
     }
 }
 
