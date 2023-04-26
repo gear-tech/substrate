@@ -21,7 +21,7 @@
 
 use wasmtime::Caller;
 
-use sp_wasm_interface::{Pointer, WordSize, util};
+use sp_wasm_interface::{FunctionContextToken, Pointer, WordSize, util};
 pub use sp_wasm_interface::HostState;
 
 use crate::runtime::StoreData;
@@ -62,7 +62,7 @@ impl<'a> sp_wasm_interface::FunctionContext for HostContext<'a> {
 			.panic_message = Some(message.to_owned());
 	}
 
-    fn with_caller_mut(&mut self, context: *mut (), callback: fn(*mut (), &mut Caller<StoreData>)) {
+    fn with_caller_mut_impl(&mut self, _: FunctionContextToken, context: *mut (), callback: fn(*mut (), &mut Caller<StoreData>)) {
         callback(context, &mut self.caller)
     }
 }

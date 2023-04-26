@@ -78,6 +78,8 @@ mod private {
 
 	impl Sealed for i32 {}
 	impl Sealed for i64 {}
+
+    pub(super) struct Token;
 }
 
 /// A trait that requires `RefUnwindSafe` when `feature = std`.
@@ -118,6 +120,14 @@ pub struct Caller<'a, T>(PhantomData<&'a T>);
 #[cfg(all(feature = "std", feature = "wasmtime"))]
 pub use wasmtime::Caller;
 
+pub struct FunctionContextToken(private::Token);
+
+impl FunctionContextToken {
+    fn new() -> Self {
+        Self(private::Token)
+    }
+}
+
 /// Context used by `Function` to interact with the allocator and the memory of the wasm instance.
 pub trait FunctionContext {
 	/// Read memory from `address` into a vector.
@@ -157,7 +167,18 @@ pub trait FunctionContext {
 	/// is harmless and will overwrite the previously set error message.
 	fn register_panic_error_message(&mut self, message: &str);
 
-    fn with_caller_mut(&mut self, context: *mut (), callback: fn(*mut (), &mut Caller<StoreData>));
+    fn with_caller_mut_impl(&mut self, _: FunctionContextToken, context: *mut (), callback: fn(*mut (), &mut Caller<StoreData>));
+
+}
+
+pub fn with_caller_mut<T: FnMut(&mut Caller<StoreData>)>(context: &mut dyn FunctionContext, mut callback: T) {
+    let callback: *mut T = &mut callback;
+    context.with_caller_mut_impl(FunctionContextToken::new(), callback.cast(), |callback, caller| {
+        let callback: *mut T = callback.cast();
+        let callback: &mut T = unsafe { callback.as_mut().expect("we own the value, obtain mutable reference to it and cast to pointer (correct (not null) and aligned properly); qed") };
+
+        callback(caller);
+    })
 }
 
 if_wasmtime_is_enabled! {
