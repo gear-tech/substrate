@@ -37,13 +37,16 @@ use crate::{
 
 #[cfg(feature = "host-sandbox")]
 use self::wasmer_backend::{
-	get_global as wasmer_get_global, instantiate as wasmer_instantiate, invoke as wasmer_invoke,
-	new_memory as wasmer_new_memory, set_global_i64 as wasmer_set_global_i64,
-	Backend as WasmerBackend, MemoryWrapper as WasmerMemoryWrapper,
+	get_global as wasmer_get_global, get_global_i32 as wasmer_get_global_i32,
+	get_global_i64 as wasmer_get_global_i64, instantiate as wasmer_instantiate,
+	invoke as wasmer_invoke, new_memory as wasmer_new_memory,
+	set_global_i64 as wasmer_set_global_i64, Backend as WasmerBackend,
+	MemoryWrapper as WasmerMemoryWrapper,
 };
 use self::wasmi_backend::{
-	get_global as wasmi_get_global, instantiate as wasmi_instantiate, invoke as wasmi_invoke,
-	new_memory as wasmi_new_memory, set_global as wasmi_set_global,
+	get_global as wasmi_get_global, get_global_i32 as wasmi_get_global_i32,
+	get_global_i64 as wasmi_get_global_i64, instantiate as wasmi_instantiate,
+	invoke as wasmi_invoke, new_memory as wasmi_new_memory, set_global as wasmi_set_global,
 	MemoryWrapper as WasmiMemoryWrapper,
 };
 
@@ -211,6 +214,24 @@ impl SandboxInstance {
 
 			#[cfg(feature = "host-sandbox")]
 			BackendInstance::Wasmer(wasmer_instance) => wasmer_get_global(wasmer_instance, name),
+		}
+	}
+
+	pub fn get_global_i32(&self, name: &str) -> Option<i32> {
+		match &self.backend_instance {
+			BackendInstance::Wasmi(wasmi_instance) => wasmi_get_global_i32(wasmi_instance, name),
+
+			#[cfg(feature = "host-sandbox")]
+			BackendInstance::Wasmer(wasmer_instance) => wasmer_get_global_i32(wasmer_instance, name),
+		}
+	}
+
+	pub fn get_global_i64(&self, name: &str) -> Option<i64> {
+		match &self.backend_instance {
+			BackendInstance::Wasmi(wasmi_instance) => wasmi_get_global_i64(wasmi_instance, name),
+
+			#[cfg(feature = "host-sandbox")]
+			BackendInstance::Wasmer(wasmer_instance) => wasmer_get_global_i64(wasmer_instance, name),
 		}
 	}
 

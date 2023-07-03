@@ -353,6 +353,22 @@ impl Sandbox for FunctionExecutor {
 			.map_err(|e| e.to_string())
 	}
 
+	fn get_global_i32(&self, instance_idx: u32, name: &str) -> WResult<Option<i32>> {
+		self.sandbox_store
+			.borrow()
+			.instance(instance_idx)
+			.map(|i| i.get_global_i32(name))
+			.map_err(|e| e.to_string())
+	}
+
+	fn get_global_i64(&self, instance_idx: u32, name: &str) -> WResult<Option<i64>> {
+		self.sandbox_store
+			.borrow()
+			.instance(instance_idx)
+			.map(|i| i.get_global_i64(name))
+			.map_err(|e| e.to_string())
+	}
+
 	fn set_global_i64(&self, instance_idx: u32, name: &str, value: i64) -> WResult<u32> {
 		trace!(target: "sp-sandbox", "set_global_i64, instance_idx={}", instance_idx);
 

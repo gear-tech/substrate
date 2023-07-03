@@ -1708,6 +1708,18 @@ pub trait Sandbox {
 			.expect("Failed to get global from sandbox")
 	}
 
+	fn get_global_i32(&mut self, instance_idx: u32, name: &str) -> Option<i32> {
+		self.sandbox()
+			.get_global_i32(instance_idx, name)
+			.expect("Failed to get global from sandbox")
+	}
+
+	fn get_global_i64(&mut self, instance_idx: u32, name: &str) -> Option<i64> {
+		self.sandbox()
+			.get_global_i64(instance_idx, name)
+			.expect("Failed to get global from sandbox")
+	}
+
 	/// Set the value of a global with the given `name`. The sandbox is determined by the given
 	/// `instance_idx`.
 	fn set_global_i64(&mut self, instance_idx: u32, name: &str, value: i64) -> u32 {

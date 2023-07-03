@@ -532,6 +532,18 @@ pub fn get_global(instance: &wasmer::Instance, name: &str) -> Option<Value> {
 	Some(wasmtime_value)
 }
 
+pub fn get_global_i32(instance: &wasmer::Instance, name: &str) -> Option<i32> {
+	let global = instance.exports.get_global(name).ok()?;
+
+	global.get().i32()
+}
+
+pub fn get_global_i64(instance: &wasmer::Instance, name: &str) -> Option<i64> {
+	let global = instance.exports.get_global(name).ok()?;
+
+	global.get().i64()
+}
+
 /// Set global value by name
 pub fn set_global_i64(
 	instance: &wasmer::Instance,
