@@ -69,7 +69,7 @@ impl super::SandboxMemory for Memory {
 	fn size(&self) -> u32 {
 		self.memref.current_size().0 as u32
 	}
-	
+
 	unsafe fn get_buff(&self) -> u64 {
 		self.memref.direct_access_mut().as_mut().as_mut_ptr() as usize as u64
 	}
@@ -267,6 +267,10 @@ impl super::InstanceGlobals for InstanceGlobals {
 
 	fn get_global_i64(&self, _name: &str) -> Option<i64> {
 		None
+	}
+
+	fn set_global_val(&self, _name: &str, _value: Value) -> Result<(), super::GlobalsSetError> {
+		Err(super::GlobalsSetError::NotFound)
 	}
 
 	fn set_global_i64(&self, _name: &str, _value: i64) -> Result<(), super::GlobalsSetError> {

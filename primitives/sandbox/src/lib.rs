@@ -239,5 +239,7 @@ pub trait InstanceGlobals: Sized + Clone {
 	fn get_global_i64(&self, name: &str) -> Option<i64>;
 
 	/// Set the value of a global with the given `name`.
+	fn set_global_val(&self, name: &str, value: Value) -> Result<(), GlobalsSetError>;
+
 	fn set_global_i64(&self, name: &str, value: i64) -> Result<(), GlobalsSetError>;
 }
