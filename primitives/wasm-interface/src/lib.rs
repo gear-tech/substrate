@@ -393,7 +393,7 @@ pub trait Sandbox {
 	/// given `instance_idx` instance.
 	///
 	/// Returns `Ok(())` when the requested global variable could be modified.
-	fn set_global_val(&self, instance_idx: u32, name: &str, value: Value) -> Result<u32>;
+	fn set_global_i64(&self, instance_idx: u32, name: &str, value: i64) -> Result<u32>;
 
 	/// Returns size in wasm pages of memory with id `memory_id`.
 	fn memory_size(&mut self, memory_id: MemoryId) -> Result<u32>;

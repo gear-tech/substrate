@@ -37,13 +37,14 @@ use crate::{
 
 #[cfg(feature = "host-sandbox")]
 use self::wasmer_backend::{
-	get_global as wasmer_get_global, set_global as wasmer_set_global, instantiate as wasmer_instantiate, invoke as wasmer_invoke,
-	new_memory as wasmer_new_memory, Backend as WasmerBackend,
-	MemoryWrapper as WasmerMemoryWrapper,
+	get_global as wasmer_get_global, instantiate as wasmer_instantiate, invoke as wasmer_invoke,
+	new_memory as wasmer_new_memory, set_global_i64 as wasmer_set_global_i64,
+	Backend as WasmerBackend, MemoryWrapper as WasmerMemoryWrapper,
 };
 use self::wasmi_backend::{
-	get_global as wasmi_get_global, set_global as wasmi_set_global, instantiate as wasmi_instantiate, invoke as wasmi_invoke,
-	new_memory as wasmi_new_memory, MemoryWrapper as WasmiMemoryWrapper,
+	get_global as wasmi_get_global, instantiate as wasmi_instantiate, invoke as wasmi_invoke,
+	new_memory as wasmi_new_memory, set_global as wasmi_set_global,
+	MemoryWrapper as WasmiMemoryWrapper,
 };
 
 /// Index of a function inside the supervisor.
@@ -216,12 +217,18 @@ impl SandboxInstance {
 	/// Set the value of a global with the given `name`.
 	///
 	/// Returns `Ok(Some(()))` if the global could be modified.
-	pub fn set_global_val(&self, name: &str, value: sp_wasm_interface::Value) -> std::result::Result<Option<()>, error::Error> {
+	pub fn set_global_i64(
+		&self,
+		name: &str,
+		value: i64,
+	) -> std::result::Result<Option<()>, error::Error> {
 		match &self.backend_instance {
-			BackendInstance::Wasmi(wasmi_instance) => wasmi_set_global(wasmi_instance, name, value),
+			BackendInstance::Wasmi(wasmi_instance) => {
+				wasmi_set_global(wasmi_instance, name, sp_wasm_interface::Value::I64(value))
+			},
 
 			#[cfg(feature = "host-sandbox")]
-			BackendInstance::Wasmer(wasmer_instance) => wasmer_set_global(wasmer_instance, name, value),
+			BackendInstance::Wasmer(wasmer_instance) => wasmer_set_global_i64(wasmer_instance, name, value),
 		}
 	}
 }
