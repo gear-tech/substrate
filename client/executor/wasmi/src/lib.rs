@@ -361,7 +361,7 @@ impl Sandbox for FunctionExecutor {
 			.map_err(|e| e.to_string())
 	}
 
-	fn get_global_i64(&self, instance_idx: u32, name: &str) -> WResult<Option<i64>> {
+	fn get_global_i64(&self, instance_idx: u32, name: &str) -> WResult<i64> {
 		self.sandbox_store
 			.borrow()
 			.instance(instance_idx)

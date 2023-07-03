@@ -369,11 +369,7 @@ impl<'a> Sandbox for HostContext<'a> {
 			.map_err(|e| e.to_string())
 	}
 
-	fn get_global_i64(
-		&self,
-		instance_idx: u32,
-		name: &str,
-	) -> sp_wasm_interface::Result<Option<i64>> {
+	fn get_global_i64(&self, instance_idx: u32, name: &str) -> sp_wasm_interface::Result<i64> {
 		self.sandbox_store()
 			.instance(instance_idx)
 			.map(|i| i.get_global_i64(name))

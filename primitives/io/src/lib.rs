@@ -1714,7 +1714,7 @@ pub trait Sandbox {
 			.expect("Failed to get global from sandbox")
 	}
 
-	fn get_global_i64(&mut self, instance_idx: u32, name: &str) -> Option<i64> {
+	fn get_global_i64(&mut self, instance_idx: u32, name: &str) -> i64 {
 		self.sandbox()
 			.get_global_i64(instance_idx, name)
 			.expect("Failed to get global from sandbox")

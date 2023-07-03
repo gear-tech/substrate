@@ -226,12 +226,16 @@ impl SandboxInstance {
 		}
 	}
 
-	pub fn get_global_i64(&self, name: &str) -> Option<i64> {
+	pub fn get_global_i64(&self, name: &str) -> i64 {
 		match &self.backend_instance {
-			BackendInstance::Wasmi(wasmi_instance) => wasmi_get_global_i64(wasmi_instance, name),
+			BackendInstance::Wasmi(wasmi_instance) => {
+				wasmi_get_global_i64(wasmi_instance, name).unwrap_or(i64::MAX)
+			},
 
 			#[cfg(feature = "host-sandbox")]
-			BackendInstance::Wasmer(wasmer_instance) => wasmer_get_global_i64(wasmer_instance, name),
+			BackendInstance::Wasmer(wasmer_instance) => {
+				wasmer_get_global_i64(wasmer_instance, name).unwrap_or(i64::MAX)
+			},
 		}
 	}
 
@@ -246,7 +250,7 @@ impl SandboxInstance {
 		match &self.backend_instance {
 			BackendInstance::Wasmi(wasmi_instance) => wasmi_set_global(wasmi_instance, name, value),
 
-			#[cfg(feature = "wasmer-sandbox")]
+			#[cfg(feature = "host-sandbox")]
 			BackendInstance::Wasmer(wasmer_instance) => wasmer_set_global(wasmer_instance, name, value),
 		}
 	}

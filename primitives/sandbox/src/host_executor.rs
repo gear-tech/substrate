@@ -191,8 +191,10 @@ impl super::InstanceGlobals for InstanceGlobals {
 		self.instance_idx.and_then(|i| sandbox::get_global_i32(i, name))
 	}
 
-	fn get_global_i64(&self, name: &str) -> Option<i64> {
-		self.instance_idx.and_then(|i| sandbox::get_global_i64(i, name))
+	fn get_global_i64(&self, name: &str) -> i64 {
+		self.instance_idx
+			.and_then(|i| Some(sandbox::get_global_i64(i, name)))
+			.unwrap_or(i64::MAX)
 	}
 
 	fn set_global_val(&self, name: &str, value: Value) -> Result<(), super::GlobalsSetError> {
@@ -204,7 +206,8 @@ impl super::InstanceGlobals for InstanceGlobals {
 				_ => Err(super::GlobalsSetError::Other),
 			},
 		}
-		
+	}
+
 	fn set_global_i64(&self, name: &str, value: i64) -> Result<(), super::GlobalsSetError> {
 		match self.instance_idx {
 			None => Err(super::GlobalsSetError::Other),

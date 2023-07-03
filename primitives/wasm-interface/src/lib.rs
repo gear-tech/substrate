@@ -391,7 +391,7 @@ pub trait Sandbox {
 
 	fn get_global_i32(&self, instance_idx: u32, name: &str) -> Result<Option<i32>>;
 
-	fn get_global_i64(&self, instance_idx: u32, name: &str) -> Result<Option<i64>>;
+	fn get_global_i64(&self, instance_idx: u32, name: &str) -> Result<i64>;
 
 	/// Set the value of a global with the given `name`. The sandbox is determined by the
 	/// given `instance_idx` instance.
