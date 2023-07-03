@@ -533,7 +533,7 @@ pub fn get_global(instance: &wasmer::Instance, name: &str) -> Option<Value> {
 }
 
 /// Set global value by name
-pub fn set_global(
+pub fn set_global_i64(
 	instance: &wasmer::Instance,
 	name: &str,
 	value: i64,
