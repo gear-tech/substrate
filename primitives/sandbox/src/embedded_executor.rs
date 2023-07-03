@@ -261,7 +261,7 @@ impl super::InstanceGlobals for InstanceGlobals {
 		None
 	}
 
-	fn set_global_val(&self, _name: &str, _value: Value) -> Result<(), super::GlobalsSetError> {
+	fn set_global_i64(&self, _name: &str, _value: i64) -> Result<(), super::GlobalsSetError> {
 		Err(super::GlobalsSetError::NotFound)
 	}
 }

@@ -229,12 +229,11 @@ pub enum GlobalsSetError {
 
 /// This instance can be used for changing exported globals.
 pub trait InstanceGlobals: Sized + Clone {
-
 	/// Get the value from a global with the given `name`.
 	///
 	/// Returns `Some(_)` if the global could be found.
 	fn get_global_val(&self, name: &str) -> Option<Value>;
 
 	/// Set the value of a global with the given `name`.
-	fn set_global_val(&self, name: &str, value: Value) -> Result<(), GlobalsSetError>;
- }
+	fn set_global_i64(&self, name: &str, value: i64) -> Result<(), GlobalsSetError>;
+}

@@ -353,17 +353,15 @@ impl Sandbox for FunctionExecutor {
 			.map_err(|e| e.to_string())
 	}
 
-	fn set_global_val(&self, instance_idx: u32, name: &str, value: sp_wasm_interface::Value) -> WResult<u32> {
-		trace!(target: "sp-sandbox", "set_global_val, instance_idx={}", instance_idx);
+	fn set_global_i64(&self, instance_idx: u32, name: &str, value: i64) -> WResult<u32> {
+		trace!(target: "sp-sandbox", "set_global_i64, instance_idx={}", instance_idx);
 
-		let instance = self.sandbox_store
-			.borrow()
-			.instance(instance_idx)
-			.map_err(|e| e.to_string())?;
+		let instance =
+			self.sandbox_store.borrow().instance(instance_idx).map_err(|e| e.to_string())?;
 
-		let result = instance.set_global_val(name, value);
+		let result = instance.set_global_i64(name, value);
 
-		trace!(target: "sp-sandbox", "set_global_val, name={name}, value={value:?}, result={result:?}");
+		trace!(target: "sp-sandbox", "set_global_i64, name={name}, value={value:?}, result={result:?}");
 		match result {
 			Ok(None) => Ok(sandbox_env::ERROR_GLOBALS_NOT_FOUND),
 			Ok(Some(_)) => Ok(sandbox_env::ERROR_GLOBALS_OK),

@@ -349,7 +349,11 @@ pub fn get_global(instance: &wasmi::ModuleRef, name: &str) -> Option<Value> {
 }
 
 /// Set global value by name
-pub fn set_global(instance: &wasmi::ModuleRef, name: &str, value: Value) -> std::result::Result<Option<()>, error::Error> {
+pub fn set_global(
+	instance: &wasmi::ModuleRef,
+	name: &str,
+	value: Value,
+) -> std::result::Result<Option<()>, error::Error> {
 	let export = match instance.export_by_name(name) {
 		Some(e) => e,
 		None => return Ok(None),
@@ -360,8 +364,5 @@ pub fn set_global(instance: &wasmi::ModuleRef, name: &str, value: Value) -> std:
 		None => return Ok(None),
 	};
 
-	global
-		.set(value.into())
-		.map(|_| Some(()))
-		.map_err(error::Error::Wasmi)
+	global.set(value.into()).map(|_| Some(())).map_err(error::Error::Wasmi)
 }

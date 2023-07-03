@@ -216,9 +216,15 @@ impl SandboxInstance {
 	/// Set the value of a global with the given `name`.
 	///
 	/// Returns `Ok(Some(()))` if the global could be modified.
-	pub fn set_global_val(&self, name: &str, value: sp_wasm_interface::Value) -> std::result::Result<Option<()>, error::Error> {
+	pub fn set_global_i64(
+		&self,
+		name: &str,
+		value: i64,
+	) -> std::result::Result<Option<()>, error::Error> {
 		match &self.backend_instance {
-			BackendInstance::Wasmi(wasmi_instance) => wasmi_set_global(wasmi_instance, name, value),
+			BackendInstance::Wasmi(wasmi_instance) => {
+				wasmi_set_global(wasmi_instance, name, sp_wasm_interface::Value::I64(value))
+			},
 
 			#[cfg(feature = "host-sandbox")]
 			BackendInstance::Wasmer(wasmer_instance) => wasmer_set_global(wasmer_instance, name, value),
