@@ -20,21 +20,21 @@
 
 use crate::{
 	host::HostState,
-	instance_wrapper::{EntryPoint, InstanceWrapper, MemoryWrapper},
+	instance_wrapper::{EntryPoint, InstanceWrapper},
 	util::{self, replace_strategy_if_broken},
 };
 
-use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
+use sp_allocator::{AllocationStats, FreeingBumpHeapAllocator};
 use sc_executor_common::{
 	error::{Result, WasmError},
 	runtime_blob::{
 		self, DataSegmentsSnapshot, ExposedMutableGlobalsSet, GlobalsSnapshot, RuntimeBlob,
 	},
-	util::checked_range,
 	wasm_runtime::{HeapAllocStrategy, InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
-use sp_wasm_interface::{HostFunctions, Pointer, Value, WordSize};
+use sp_wasm_interface::{HostFunctions, Pointer, Value, WordSize, MemoryWrapper, util as memory_util};
+pub use sp_wasm_interface::StoreData;
 use std::{
 	path::{Path, PathBuf},
 	sync::{
@@ -42,29 +42,7 @@ use std::{
 		Arc,
 	},
 };
-use wasmtime::{AsContext, Engine, Memory, Table};
-
-#[derive(Default)]
-pub(crate) struct StoreData {
-	/// This will only be set when we call into the runtime.
-	pub(crate) host_state: Option<HostState>,
-	/// This will be always set once the store is initialized.
-	pub(crate) memory: Option<Memory>,
-	/// This will be set only if the runtime actually contains a table.
-	pub(crate) table: Option<Table>,
-}
-
-impl StoreData {
-	/// Returns a mutable reference to the host state.
-	pub fn host_state_mut(&mut self) -> Option<&mut HostState> {
-		self.host_state.as_mut()
-	}
-
-	/// Returns the host memory.
-	pub fn memory(&self) -> Memory {
-		self.memory.expect("memory is always set; qed")
-	}
-}
+use wasmtime::{AsContext, Engine};
 
 pub(crate) type Store = wasmtime::Store<StoreData>;
 
@@ -183,7 +161,7 @@ impl WasmtimeInstance {
 				let entrypoint = instance_wrapper.resolve_entrypoint(method)?;
 
 				data_segments_snapshot.apply(|offset, contents| {
-					util::write_memory_from(
+					memory_util::write_memory_from(
 						instance_wrapper.store_mut(),
 						Pointer::new(offset),
 						contents,
@@ -757,8 +735,8 @@ fn inject_input_data(
 	let mut ctx = instance.store_mut();
 	let memory = ctx.data().memory();
 	let data_len = data.len() as WordSize;
-	let data_ptr = allocator.allocate(&mut MemoryWrapper(&memory, &mut ctx), data_len)?;
-	util::write_memory_from(instance.store_mut(), data_ptr, data)?;
+	let data_ptr = allocator.allocate(&mut MemoryWrapper::from((&memory, &mut ctx)), data_len)?;
+	memory_util::write_memory_from(instance.store_mut(), data_ptr, data)?;
 	Ok((data_ptr, data_len))
 }
 
@@ -775,11 +753,11 @@ fn extract_output_data(
 	//
 	// Get the size of the WASM memory in bytes.
 	let memory_size = ctx.as_context().data().memory().data_size(ctx);
-	if checked_range(output_ptr as usize, output_len as usize, memory_size).is_none() {
+	if memory_util::checked_range(output_ptr as usize, output_len as usize, memory_size).is_none() {
 		Err(WasmError::Other("output exceeds bounds of wasm memory".into()))?
 	}
 	let mut output = vec![0; output_len as usize];
 
-	util::read_memory_into(ctx, Pointer::new(output_ptr), &mut output)?;
+	memory_util::read_memory_into(ctx, Pointer::new(output_ptr), &mut output)?;
 	Ok(output)
 }
