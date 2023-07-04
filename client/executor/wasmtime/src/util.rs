@@ -16,13 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{runtime::StoreData, InstantiationStrategy};
-use sc_executor_common::{
-	error::{Error, Result},
-	util::checked_range,
-};
-use sp_wasm_interface::{Pointer, Value};
-use wasmtime::{AsContext, AsContextMut};
+use crate::InstantiationStrategy;
+use sp_wasm_interface::Value;
 
 /// Converts a [`wasmtime::Val`] into a substrate runtime interface [`Value`].
 ///
@@ -46,39 +41,6 @@ pub fn into_wasmtime_val(value: Value) -> wasmtime::Val {
 		Value::F32(f_bits) => wasmtime::Val::F32(f_bits),
 		Value::F64(f_bits) => wasmtime::Val::F64(f_bits),
 	}
-}
-
-/// Read data from the instance memory into a slice.
-///
-/// Returns an error if the read would go out of the memory bounds.
-pub(crate) fn read_memory_into(
-	ctx: impl AsContext<Data = StoreData>,
-	address: Pointer<u8>,
-	dest: &mut [u8],
-) -> Result<()> {
-	let memory = ctx.as_context().data().memory().data(&ctx);
-
-	let range = checked_range(address.into(), dest.len(), memory.len())
-		.ok_or_else(|| Error::Other("memory read is out of bounds".into()))?;
-	dest.copy_from_slice(&memory[range]);
-	Ok(())
-}
-
-/// Write data to the instance memory from a slice.
-///
-/// Returns an error if the write would go out of the memory bounds.
-pub(crate) fn write_memory_from(
-	mut ctx: impl AsContextMut<Data = StoreData>,
-	address: Pointer<u8>,
-	data: &[u8],
-) -> Result<()> {
-	let memory = ctx.as_context().data().memory();
-	let memory = memory.data_mut(&mut ctx);
-
-	let range = checked_range(address.into(), data.len(), memory.len())
-		.ok_or_else(|| Error::Other("memory write is out of bounds".into()))?;
-	memory[range].copy_from_slice(data);
-	Ok(())
 }
 
 /// Checks whether the `madvise(MADV_DONTNEED)` works as expected.

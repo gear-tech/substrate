@@ -28,19 +28,19 @@ use wasmi::{
 	TableRef,
 };
 
-use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
+use sp_allocator::AllocationStats;
 use sc_executor_common::{
 	error::{Error, MessageWithBacktrace, WasmError},
 	runtime_blob::{DataSegmentsSnapshot, RuntimeBlob},
 	wasm_runtime::{HeapAllocStrategy, InvokeMethod, WasmInstance, WasmModule},
 };
 use sp_runtime_interface::unpack_ptr_and_len;
-use sp_wasm_interface::{Function, FunctionContext, Pointer, Result as WResult, WordSize};
+use sp_wasm_interface::{Function, FunctionContext, FunctionContextToken, Pointer, Result as WResult, WordSize, Caller, StoreData};
 
 /// Wrapper around [`MemorRef`] that implements [`sc_allocator::Memory`].
 struct MemoryWrapper<'a>(&'a MemoryRef);
 
-impl sc_allocator::Memory for MemoryWrapper<'_> {
+impl sp_allocator::Memory for MemoryWrapper<'_> {
 	fn with_access_mut<R>(&mut self, run: impl FnOnce(&mut [u8]) -> R) -> R {
 		self.0.with_direct_access_mut(run)
 	}
@@ -73,7 +73,7 @@ impl sc_allocator::Memory for MemoryWrapper<'_> {
 }
 
 struct FunctionExecutor {
-	heap: RefCell<sc_allocator::FreeingBumpHeapAllocator>,
+	heap: RefCell<sp_allocator::FreeingBumpHeapAllocator>,
 	memory: MemoryRef,
 	host_functions: Arc<Vec<&'static dyn Function>>,
 	allow_missing_func_imports: bool,
@@ -90,7 +90,7 @@ impl FunctionExecutor {
 		missing_functions: Arc<Vec<String>>,
 	) -> Result<Self, Error> {
 		Ok(FunctionExecutor {
-			heap: RefCell::new(FreeingBumpHeapAllocator::new(heap_base)),
+			heap: RefCell::new(sp_allocator::FreeingBumpHeapAllocator::new(heap_base)),
 			memory: m,
 			host_functions,
 			allow_missing_func_imports,
@@ -126,6 +126,9 @@ impl FunctionContext for FunctionExecutor {
 	fn register_panic_error_message(&mut self, message: &str) {
 		self.panic_message = Some(message.to_owned());
 	}
+
+    fn with_caller_mut_impl(&mut self, _: FunctionContextToken, _context: *mut (), _callback: fn(*mut (), &mut Caller<StoreData>)) {
+    }
 }
 
 /// Will be used on initialization of a module to resolve function and memory imports.

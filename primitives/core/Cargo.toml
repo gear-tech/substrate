@@ -50,6 +50,7 @@ schnorrkel = { version = "0.9.1", features = ["preaudit_deprecated", "u64_backen
 merlin = { version = "2.0", default-features = false }
 secp256k1 = { version = "0.24.0", default-features = false, features = ["recovery", "alloc"], optional = true }
 ss58-registry = { version = "1.34.0", default-features = false }
+sp-allocator = { version = "4.1.0-dev", path = "../allocator", default-features = false }
 sp-core-hashing = { version = "5.0.0", path = "./hashing", default-features = false, optional = true }
 sp-runtime-interface = { version = "7.0.0", default-features = false, path = "../runtime-interface" }
 
@@ -87,6 +88,7 @@ std = [
 	"hash256-std-hasher/std",
 	"hash-db/std",
 	"sp-std/std",
+	"sp-allocator/std",
 	"serde",
 	"blake2/std",
 	"array-bytes",
