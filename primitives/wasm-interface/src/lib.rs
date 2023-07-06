@@ -91,7 +91,7 @@ impl TryFrom<u8> for ValueType {
 }
 
 /// Values supported by Substrate on the boundary between host/Wasm.
-#[derive(PartialEq, Debug, Clone, Copy, codec::Encode, codec::Decode)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Value {
 	/// A 32-bit integer.
 	I32(i32),
@@ -105,6 +105,58 @@ pub enum Value {
 	///
 	/// You can materialize this value using `f64::from_bits`.
 	F64(u64),
+}
+
+impl codec::Encode for Value {
+    fn size_hint(&self) -> usize {
+		match self {
+    		Value::I32(_) => 5,
+    		Value::I64(_) => 9,
+    		Value::F32(_) => 5,
+    		Value::F64(_) => 9,
+		}
+	}
+
+	fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
+		match self {
+    		Value::I32(x) => {
+				let mut data = [0u8, 0, 0, 0, 0];
+				data[1..].copy_from_slice(&x.to_le_bytes());
+				f(&data)
+			},
+    		Value::I64(x) => {
+				let mut data = [1u8, 0, 0, 0, 0, 0, 0, 0, 0];
+				data[1..].copy_from_slice(&x.to_le_bytes());
+				f(&data)
+			},
+    		Value::F32(x) => {
+				let mut data = [2u8, 0, 0, 0, 0];
+				data[1..].copy_from_slice(&x.to_le_bytes());
+				f(&data)
+			},
+    		Value::F64(x) => {
+				let mut data = [3u8, 0, 0, 0, 0, 0, 0, 0, 0];
+				data[1..].copy_from_slice(&x.to_le_bytes());
+				f(&data)
+			},
+		}
+	}
+
+    fn encoded_size(&self) -> usize {
+		self.size_hint()
+	}
+}
+
+impl codec::Decode for Value {
+    fn decode<I: codec::Input>(input: &mut I) -> result::Result<Self, codec::Error> {
+        match input.read_byte()? {
+            0 => Ok(Value::I32(<i32>::decode(input)?)),
+			1 => Ok(Value::I64(<i64>::decode(input)?)),
+			2 => Ok(Value::F32(<u32>::decode(input)?)),
+			3 => Ok(Value::F64(<u64>::decode(input)?)),
+			_ => Err("Could not decode `Value`, variant doesn't exist".into()),
+		}
+    }
 }
 
 impl Value {

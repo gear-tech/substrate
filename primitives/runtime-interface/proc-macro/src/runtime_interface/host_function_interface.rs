@@ -111,6 +111,12 @@ fn generate_extern_host_function(
 		},
 	};
 
+	// Generate nested using_ffi_value calls and a call to the extern function
+	let mut nested_calls = quote! { unsafe { #ext_function( #( #arg_names3 ),* ) } };
+	for (arg_name, arg_type) in arg_names2.zip(arg_types2) {
+		nested_calls = quote! { <#arg_type as #crate_::wasm::IntoFFIValue>::using_ffi_value(&#arg_name, |#arg_name| { #nested_calls }) };
+	}
+
 	Ok(quote! {
 		#[doc = #doc_string]
 		pub fn #function ( #( #args ),* ) #return_value {
@@ -121,14 +127,7 @@ fn generate_extern_host_function(
 				) #ffi_return_value;
 			}
 
-			// Generate all wrapped ffi values.
-			#(
-				let #arg_names2 = <#arg_types2 as #crate_::wasm::IntoFFIValue>::into_ffi_value(
-					&#arg_names2,
-				);
-			)*
-
-			let result = unsafe { #ext_function( #( #arg_names3.get() ),* ) };
+			let result = #nested_calls;
 
 			#convert_return_value
 		}

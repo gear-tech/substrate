@@ -43,6 +43,14 @@ pub trait IntoFFIValue: RIType {
 
 	/// Convert `self` into a [`WrappedFFIValue`].
 	fn into_ffi_value(&self) -> WrappedFFIValue<Self::FFIType, Self::Owned>;
+
+	/// Run `f` with provided ffi value and `_owned` living on stack.
+	fn using_ffi_value<R, F: FnOnce(Self::FFIType) -> R>(&self, f: F) -> R {
+		match Self::into_ffi_value(self) {
+			WrappedFFIValue::Wrapped(x) => f(x),
+			WrappedFFIValue::WrappedAndOwned(ffi, _owned) => f(ffi),
+		}
+	}
 }
 
 /// Represents a wrapped ffi value.
