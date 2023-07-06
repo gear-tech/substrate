@@ -147,6 +147,14 @@ pub trait PassByImpl<T>: RIType {
 	/// For more information see: [`crate::wasm::IntoFFIValue::into_ffi_value`]
 	fn into_ffi_value(instance: &T) -> WrappedFFIValue<Self::FFIType, Self::Owned>;
 
+	/// Run `f` with provided ffi value and `_owned` living on stack.
+	fn using_ffi_value<R, F: FnOnce(Self::FFIType) -> R>(instance: &T, f: F) -> R {
+		match Self::into_ffi_value(instance) {
+			WrappedFFIValue::Wrapped(x) => f(x),
+			WrappedFFIValue::WrappedAndOwned(ffi, _owned) => f(ffi),
+		}
+	}
+
 	/// Create `T` from the given ffi value.
 	///
 	/// For more information see: [`crate::wasm::FromFFIValue::from_ffi_value`]
@@ -185,6 +193,10 @@ impl<T: PassBy> IntoFFIValue for T {
 
 	fn into_ffi_value(&self) -> WrappedFFIValue<<T::PassBy as RIType>::FFIType, Self::Owned> {
 		T::PassBy::into_ffi_value(self)
+	}
+
+	fn using_ffi_value<R, F: FnOnce(Self::FFIType) -> R>(&self, f: F) -> R {
+		T::PassBy::using_ffi_value(self, f)
 	}
 }
 
@@ -241,6 +253,13 @@ impl<T: codec::Codec> PassByImpl<T> for Codec<T> {
 		let data = instance.encode();
 		let ffi_value = pack_ptr_and_len(data.as_ptr() as u32, data.len() as u32);
 		(ffi_value, data).into()
+	}
+
+	fn using_ffi_value<R, F: FnOnce(Self::FFIType) -> R>(instance: &T, f: F) -> R {
+		instance.using_encoded(|data| {
+			let ffi_value = pack_ptr_and_len(data.as_ptr() as u32, data.len() as u32);
+			f(ffi_value)
+		})
 	}
 
 	fn from_ffi_value(arg: Self::FFIType) -> T {
