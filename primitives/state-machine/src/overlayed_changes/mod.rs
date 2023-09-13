@@ -177,6 +177,7 @@ impl<Transaction, H: Hasher> StorageChanges<Transaction, H> {
 /// Storage transactions are calculated as part of the `storage_root`.
 /// These transactions can be reused for importing the block into the
 /// storage. So, we cache them to not require a recomputation of those transactions.
+#[derive(Clone)]
 pub struct StorageTransactionCache<Transaction, H: Hasher> {
 	/// Contains the changes for the main and the child storages as one transaction.
 	pub(crate) transaction: Option<Transaction>,
@@ -194,18 +195,6 @@ impl<Transaction, H: Hasher> StorageTransactionCache<Transaction, H> {
 impl<Transaction, H: Hasher> Default for StorageTransactionCache<Transaction, H> {
 	fn default() -> Self {
 		Self { transaction: None, transaction_storage_root: None }
-	}
-}
-
-impl<Transaction, H: Hasher> Clone for StorageTransactionCache<Transaction, H>
-where
-	Transaction: Clone,
-{
-	fn clone(&self) -> Self {
-		Self {
-			transaction: self.transaction.clone(),
-			transaction_storage_root: self.transaction_storage_root.clone(),
-		}
 	}
 }
 
