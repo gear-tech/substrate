@@ -197,6 +197,18 @@ impl<Transaction, H: Hasher> Default for StorageTransactionCache<Transaction, H>
 	}
 }
 
+impl<Transaction, H: Hasher> Clone for StorageTransactionCache<Transaction, H>
+where
+	Transaction: Clone,
+{
+	fn clone(&self) -> Self {
+		Self {
+			transaction: self.transaction.clone(),
+			transaction_storage_root: self.transaction_storage_root.clone(),
+		}
+	}
+}
+
 impl<Transaction: Default, H: Hasher> Default for StorageChanges<Transaction, H> {
 	fn default() -> Self {
 		Self {
