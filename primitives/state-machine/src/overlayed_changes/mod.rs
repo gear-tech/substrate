@@ -177,6 +177,7 @@ impl<Transaction, H: Hasher> StorageChanges<Transaction, H> {
 /// Storage transactions are calculated as part of the `storage_root`.
 /// These transactions can be reused for importing the block into the
 /// storage. So, we cache them to not require a recomputation of those transactions.
+#[derive(Clone)]
 pub struct StorageTransactionCache<Transaction, H: Hasher> {
 	/// Contains the changes for the main and the child storages as one transaction.
 	pub(crate) transaction: Option<Transaction>,
