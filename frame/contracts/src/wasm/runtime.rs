@@ -409,6 +409,8 @@ where
 			// Any other kind of a trap should result in a failure.
 			Err(sp_sandbox::Error::Execution) | Err(sp_sandbox::Error::OutOfBounds) =>
 				Err(Error::<E::T>::ContractTrapped)?,
+			Err(sp_sandbox::Error::MemoryGrow) =>
+				unreachable!("MemoryGrow returnes by the sandboxed runtime"),
 		}
 	}
 
