@@ -5010,6 +5010,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "memory_units"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
+
+[[package]]
 name = "merlin"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6345,7 +6351,7 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "wasm-instrument 0.4.0",
- "wasmi",
+ "wasmi 0.30.0",
  "wat",
 ]
 
@@ -8610,6 +8616,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "436b050e76ed2903236f032a59761c1eb99e1b0aead2c257922771dab1fc8c78"
 
 [[package]]
+name = "region"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76e189c2369884dce920945e2ddf79b3dff49e071a167dd1817fa9c4c00d512e"
+dependencies = [
+ "bitflags",
+ "libc",
+ "mach",
+ "winapi",
+]
+
+[[package]]
 name = "resolv-conf"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9530,6 +9548,7 @@ dependencies = [
  "tempfile",
  "tracing",
  "tracing-subscriber 0.2.25",
+ "wasmi 0.13.2",
  "wat",
 ]
 
@@ -9546,18 +9565,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sc-executor-wasmi"
-version = "0.10.0-dev"
-dependencies = [
- "log",
- "sc-executor-common",
- "sp-allocator",
- "sp-runtime-interface",
- "sp-wasm-interface",
- "wasmi 0.13.2",
-]
-
-[[package]]
 name = "sc-executor-wasmtime"
 version = "0.10.0-dev"
 dependencies = [
@@ -9569,7 +9576,6 @@ dependencies = [
  "parity-scale-codec",
  "paste",
  "rustix 0.36.14",
- "sc-allocator",
  "sc-executor-common",
  "sc-runtime-test",
  "sp-allocator",
@@ -12175,7 +12181,7 @@ dependencies = [
  "build-helper",
  "cargo_metadata",
  "filetime",
- "parity-wasm",
+ "parity-wasm 0.45.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sp-maybe-compressed-blob",
  "strum",
  "tempfile",
@@ -13325,6 +13331,16 @@ dependencies = [
 
 [[package]]
 name = "wasmi"
+version = "0.13.2"
+source = "git+https://github.com/gear-tech/wasmi?branch=v0.13.2-sign-ext#3a0b1022377919e62aadf4d78b762abd1c3e9a04"
+dependencies = [
+ "parity-wasm 0.45.0 (git+https://github.com/gear-tech/parity-wasm?branch=v0.45.0-sign-ext)",
+ "wasmi-validation",
+ "wasmi_core 0.2.1",
+]
+
+[[package]]
+name = "wasmi"
 version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e51fb5c61993e71158abf5bb863df2674ca3ec39ed6471c64f07aeaf751d67b4"
@@ -13333,8 +13349,16 @@ dependencies = [
  "smallvec",
  "spin 0.9.8",
  "wasmi_arena",
- "wasmi_core",
+ "wasmi_core 0.12.0",
  "wasmparser-nostd",
+]
+
+[[package]]
+name = "wasmi-validation"
+version = "0.5.0"
+source = "git+https://github.com/gear-tech/wasmi?branch=v0.13.2-sign-ext#3a0b1022377919e62aadf4d78b762abd1c3e9a04"
+dependencies = [
+ "parity-wasm 0.45.0 (git+https://github.com/gear-tech/parity-wasm?branch=v0.45.0-sign-ext)",
 ]
 
 [[package]]
@@ -13342,6 +13366,19 @@ name = "wasmi_arena"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "401c1f35e413fac1846d4843745589d9ec678977ab35a384db8ae7830525d468"
+
+[[package]]
+name = "wasmi_core"
+version = "0.2.1"
+source = "git+https://github.com/gear-tech/wasmi?branch=v0.13.2-sign-ext#3a0b1022377919e62aadf4d78b762abd1c3e9a04"
+dependencies = [
+ "downcast-rs",
+ "libm 0.2.7",
+ "memory_units",
+ "num-rational",
+ "num-traits",
+ "region",
+]
 
 [[package]]
 name = "wasmi_core"
