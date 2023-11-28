@@ -8929,16 +8929,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sc-allocator"
-version = "4.1.0-dev"
-dependencies = [
- "log",
- "sp-core",
- "sp-wasm-interface",
- "thiserror",
-]
-
-[[package]]
 name = "sc-authority-discovery"
 version = "0.10.0-dev"
 dependencies = [
@@ -9547,11 +9537,24 @@ dependencies = [
 name = "sc-executor-common"
 version = "0.10.0-dev"
 dependencies = [
- "sc-allocator",
+ "sp-allocator",
  "sp-maybe-compressed-blob",
  "sp-wasm-interface",
  "thiserror",
  "wasm-instrument 0.3.0",
+ "wasmi 0.13.2",
+]
+
+[[package]]
+name = "sc-executor-wasmi"
+version = "0.10.0-dev"
+dependencies = [
+ "log",
+ "sc-executor-common",
+ "sp-allocator",
+ "sp-runtime-interface",
+ "sp-wasm-interface",
+ "wasmi 0.13.2",
 ]
 
 [[package]]
@@ -9569,6 +9572,7 @@ dependencies = [
  "sc-allocator",
  "sc-executor-common",
  "sc-runtime-test",
+ "sp-allocator",
  "sp-io",
  "sp-runtime-interface",
  "sp-wasm-interface",
@@ -10777,6 +10781,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sp-allocator"
+version = "4.1.0-dev"
+dependencies = [
+ "log",
+ "parity-scale-codec",
+ "sp-wasm-interface-common",
+ "thiserror",
+]
+
+[[package]]
 name = "sp-api"
 version = "4.0.0-dev"
 dependencies = [
@@ -11159,6 +11173,7 @@ dependencies = [
  "secrecy",
  "serde",
  "serde_json",
+ "sp-allocator",
  "sp-core-hashing",
  "sp-core-hashing-proc-macro",
  "sp-debug-derive",
@@ -11713,8 +11728,19 @@ dependencies = [
  "impl-trait-for-tuples",
  "log",
  "parity-scale-codec",
+ "sp-allocator",
  "sp-std",
+ "sp-wasm-interface-common",
  "wasmtime",
+]
+
+[[package]]
+name = "sp-wasm-interface-common"
+version = "7.0.0"
+dependencies = [
+ "parity-scale-codec",
+ "sp-std",
+ "wasmi 0.13.2",
 ]
 
 [[package]]

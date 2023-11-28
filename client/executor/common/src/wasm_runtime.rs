@@ -21,7 +21,7 @@
 use crate::error::Error;
 use sp_wasm_interface::Value;
 
-pub use sc_allocator::AllocationStats;
+pub use sp_allocator::AllocationStats;
 
 /// Default heap allocation strategy.
 pub const DEFAULT_HEAP_ALLOC_STRATEGY: HeapAllocStrategy =
