@@ -1,13 +1,13 @@
 [package]
-name = "sp-wasm-interface-common"
+name = "gp-wasm-interface-common"
 version = "7.0.0"
-authors = ["Parity Technologies <admin@parity.io>"]
+authors = ["Parity Technologies <admin@parity.io>", "Gear Technologies"]
 edition = "2021"
 license = "Apache-2.0"
-homepage = "https://substrate.io"
-repository = "https://github.com/paritytech/substrate/"
+homepage = "https://gear-tech.io"
+repository = "https://github.com/gear-tech/gear"
 description = "Types and traits for interfacing between the host and the wasm runtime."
-documentation = "https://docs.rs/sp-wasm-interface"
+documentation = "https://docs.rs/gp-wasm-interface"
 readme = "README.md"
 
 [package.metadata.docs.rs]
@@ -15,7 +15,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.2.2", default-features = false, features = ["derive"] }
-wasmi = { git = "https://github.com/gear-tech/wasmi", branch = "v0.13.2-sign-ext", default-features = false, optional = true }
+wasmi = { git = "https://github.com/gear-tech/wasmi", branch = "v0.13.2-sign-ext", default-features = false, optional = true, version = "0.13.2" }
 sp-std = { version = "5.0.0", default-features = false, path = "../std" }
 
 [features]
