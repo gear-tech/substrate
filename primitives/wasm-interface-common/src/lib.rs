@@ -22,6 +22,8 @@
 use sp_std::borrow::Cow;
 use core::{mem, marker::PhantomData};
 
+pub mod util;
+
 #[cfg(feature = "wasmi")]
 pub use wasmi;
 
