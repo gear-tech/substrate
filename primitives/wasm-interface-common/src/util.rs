@@ -16,6 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::ops::Range;
+
 /// Construct a range from an offset to a data length after the offset.
 /// Returns None if the end of the range would exceed some maximum offset.
 pub fn checked_range(offset: usize, len: usize, max: usize) -> Option<Range<usize>> {

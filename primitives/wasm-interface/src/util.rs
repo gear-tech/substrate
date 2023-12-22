@@ -17,7 +17,6 @@
 
 use super::*;
 use wasmtime::{AsContext, AsContextMut};
-use sp_std::ops::Range;
 pub use sp_wasm_interface_common::util::checked_range;
 
 pub fn write_memory_from(
