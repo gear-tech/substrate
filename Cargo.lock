@@ -10743,7 +10743,7 @@ dependencies = [
 
 [[package]]
 name = "sp-wasm-interface-common"
-version = "7.0.0"
+version = "7.0.1"
 dependencies = [
  "parity-scale-codec",
  "sp-std",
