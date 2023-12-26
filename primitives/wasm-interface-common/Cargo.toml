@@ -1,10 +1,10 @@
 [package]
 name = "sp-wasm-interface-common"
-version = "7.0.1"
+version = "7.0.2"
 authors = ["Gear Technologies", "Parity Technologies <admin@parity.io>"]
 edition = "2021"
 license = "Apache-2.0"
-homepage = "https://substrate.io"
+homepage = "https://gear-tech.io"
 repository = "https://github.com/gear-tech/gear"
 description = "Types and traits for interfacing between the host and the wasm runtime."
 documentation = "https://docs.rs/sp-wasm-interface-common"
