@@ -1,5 +1,5 @@
 [package]
-name = "gp-io"
+name = "sp-io"
 version = "7.0.0"
 authors = ["Gear Technologies", "Parity Technologies <admin@parity.io>"]
 edition = "2021"
